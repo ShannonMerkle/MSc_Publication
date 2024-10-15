@@ -14,7 +14,9 @@ Oct2018_March2019_Buzz$End_Time <- as.POSIXct(Oct2018_March2019_Buzz$End_Time, f
 
 
 ###################################################################################################################################
-####### CODE TO CORRELATE ALL NOISE MONITOR ROWS TO MATCHING BUZZ EVENTS WITH ID NUMBERS
+####### EVENT_ID CORRELATED TO NOISE MONITOR ###############
+
+## this code finds any noise monitor data that falls between each event ID (both ambient and vessel presence) and correlated 
 
 # Create new dataframe to add data into 
 Buzz_Noise_Monitor_Oct2018 <- data.frame()
@@ -28,39 +30,44 @@ for (i in 1:nrow(Oct2018_March2019_Buzz)) {
   end_time <- Oct2018_March2019_Buzz$End_Time[i]
   
   # Find rows in Noise_Monitor that have UTC between start_time and end_time
-  event_noise <- Noise_Monitor_2018Oct09[Noise_Monitor_2018Oct09$UTC >= start_time & Noise_Monitor_2018Oct09$UTC <= end_time, ]
+  event_noise_temp <- Noise_Monitor_2018Oct09[Noise_Monitor_2018Oct09$UTC >= start_time & Noise_Monitor_2018Oct09$UTC <= end_time, ]
 
   # If there are matching rows, add Event_ID_Number to them
-  if (nrow(event_noise) > 0) {
-    event_noise$Event_ID <- Oct2018_March2019_Buzz$Event_ID[i]
+  if (nrow(event_noise_temp) > 0) {
+    event_noise_temp$Event_ID <- Oct2018_March2019_Buzz$Event_ID[i]
     
     # Append the matching rows to the result dataframe
-    Buzz_Noise_Monitor_Oct2018 <- rbind(Buzz_Noise_Monitor_Oct2018, event_noise)
+    Buzz_Noise_Monitor_Oct2018 <- rbind(Buzz_Noise_Monitor_Oct2018, event_noise_temp)
   }
 }
 
 # View the new dataframe
 View(Buzz_Noise_Monitor_Oct2018)
 
-##### THIS WORKS YOU JUST HAVE TO SCROLL OVER IN THE COLUMN PAGES TO SEE THE EVENT_ID COLUMN 
+
 ###################################################################################################################################
+#### REMOVE ALL THE EXCESS COLUMNS THAT ARE NOT NEEDED 
 
-#### NOW LETS CLEAN UP SOME OF THE EXCESS COLUMNS WE DO NOT NEED TO MAKE THIS EASIER TO VIEW
-
-# to remove a column in existing dataframe 
-dataframe$column_name <- NULL 
+## Decide what parameter you want to use 
 
 library(dplyr)
 
-# Remove columns with "low95" in their names
+# Remove all median columns -- MAKE A BACKUP OF THE DATAFRAME FIRST JUST IN CASE 
 Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
   select(-contains("_median"))
+
+# remove all low95 columns -- but maybe this is something we want to use??
+Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
+  select(-contains("_low95"))
+
+Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
+  select(-contains("_high95"))
 
 # Check the result
 View(Buzz_Noise_Monitor_Oct2018)
 
 ###################################################################################################################################
-# CORRELATE COLUMNS FOR EXPOSURE 500M OR NO EXPOSURE 
+################ CORRELATE COLUMNS FOR EXPOSURE 500M OR NO EXPOSURE ##################
 
 # Perform a left join to correlate Event_ID and copy the Exposure_500m value
 Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
@@ -78,6 +85,7 @@ Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
 View(Buzz_Noise_Monitor_Oct2018)
 
 ###################################################################################################################################
+################################ VISUALS ################################
 
 ## TESTING FOR SPECIFIC EVENT 
 

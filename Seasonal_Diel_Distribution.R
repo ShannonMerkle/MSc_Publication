@@ -36,6 +36,7 @@ Buzz_Master$Season <- with(Buzz_Master, ifelse(Month %in% c(12, 1, 2), "WINTER",
 # 17:00 - 22:59 CEST = Dusk
 # 23:00 - 04:59 CEST = Night 
 
+## UTC conversions -- jsut remember to convert back for discussions and note daylights savings time 
 # 06:00 - 11:59 = Dawn
 # 12:00 - 17:59 = Day 
 # 18:00 - 23:59 = Dusk 
@@ -73,6 +74,7 @@ View(Time_of_Day_Counts)
 
 ######### VERY BASIC HISTOGRAMS #############
 
+# these do not really work 
 hist(Buzz_Master$Hour)
 hist(Buzz_Master$Month)
 

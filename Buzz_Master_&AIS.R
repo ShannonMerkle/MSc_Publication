@@ -12,23 +12,29 @@ Buzz_Master$Buzz_to_Total_Percentage <- Buzz_Master$Buzz_Rate*100
 # rounding decimal places to 2 
 Buzz_Master$Buzz_to_Total_Percentage <- round(Buzz_Master$Buzz_to_Total_Percentage, 2)
 
+### Creating a column that gives the duration of the click event in seconds
+Buzz_Master$Click_Train_Length <- as.numeric(difftime(Buzz_Master$End_Time, Buzz_Master$Start_Time, units = "secs"))
+
+###################################################################################################################################
+####### BRIEF COUNT STATISTICS 
+
+## Buzz vs Non-Buzz trains 
 countBuzz_YES <- sum(Buzz_Master$Buzz_Train == 'YES', na.rm = TRUE)
 countBuzz_YES
 
 countBuzz_NO <- sum(Buzz_Master$Buzz_Train == 'NO', na.rm = TRUE)
 countBuzz_NO
 
-countExposures_3k <- sum(Buzz_Master$Exposure_3k == 0)
+## Count of Exposures and NON-exposures 
+countExposures_3k <- sum(Buzz_Master$Exposure_3k == 1)
 countExposures_3k
 
-### Creating a column that gives the duration of the click event in seconds
-Buzz_Master$Click_Train_Length <- as.numeric(difftime(Buzz_Master$End_Time, Buzz_Master$Start_Time, units = "secs"))
+countNO_Exposure <- sum(Buzz_Master$Exposure_500m == 0)
+countNO_Exposure
 
 ###################################################################################################################################
 ## MMSI NUMBER CONNECTION
-
 #### This is working on the entire database, however the AIS data does not cover this entire dataset 
-
 
 # FIRST - Ensure datetime format - needed to update the format of these to include UTC since the AIS did 
 Buzz_Master$Start_Time <- as.POSIXct(Buzz_Master$Start_Time, format="%Y-%m-%d %H:%M:%S")
@@ -40,23 +46,29 @@ print(head(Buzz_Master$End_Time, 10))
 
 print(head(AIS_3kRadius_2018Oct_2019March$UTC, 10))
 
-## create new mmsiNumber columns
+## create new mmsiNumber columns -- DO NOT NEED TO DO THIS 
 Buzz_Master$mmsiNumber_1 <- NA
 Buzz_Master$mmsiNumber_2 <- NA
+Buzz_Master$mmsiNumber_3 <- NA
+Buzz_Master$mmsiNumber_4 <- NA
+Buzz_Master$mmsiNumber_5 <- NA
+Buzz_Master$mmsiNumber_6 <- NA
+Buzz_Master$mmsiNumber_7 <- NA
+Buzz_Master$mmsiNumber_8 <- NA
+Buzz_Master$mmsiNumber_9 <- NA
 
 
 ## make sure mmsiNumbers are in numeric format 
 AIS_3kRadius_2018Oct_2019March$mmsiNumber <- as.numeric(AIS_3kRadius_2018Oct_2019March$mmsiNumber)
 
-############################## this works you just have to run it at the end like a smart person 
-### RUN THE LOOP 
+###################################################################################################################################
+############################## NOW START THE LOOP TO LOOK FOR MMSI NUMBERS THAT MATCH ##############################
+
 # Loop through each event in Buzz_Master
 for (i in 1:nrow(Buzz_Master)) {
   
   ## these are great to give evidence that the code is actually doing something -- like a sign of life code 
   print(paste("Processing Event_ID:", Buzz_Master$Event_ID[i]))
-  print(paste("Start Time:", Buzz_Master$Start_Time[i]))
-  print(paste("End Time:", Buzz_Master$End_Time[i]))
   
   if (Buzz_Master$Exposure_3k[i] == 1) {
     
@@ -84,37 +96,9 @@ for (i in 1:nrow(Buzz_Master)) {
 # Fill any empty mmsiNumber columns with NA
 Buzz_Master[is.na(Buzz_Master)] <- NA
 
-
 ###################################################################################################################################
-## BEFORE REALIZING THE TOP CODE DID WORK I RAN CODE FOR JUST A SINGLE EVENT AND CREATED A NEW DATAFRAME TO VEIW IT 
-
-Buzz_Master_BACKUP$Start_Time <- as.POSIXct(Buzz_Master$Start_Time, format="%Y-%m-%d %H:%M:%S")
-
-str(Buzz_Master)
-print(head(Buzz_Master_BACKUP$Start_Time, 10))
-
-## trying it with one event_ID == 18 
-
-# Extract the Start_Time and End_Time for Event_ID 18
-event_id_18 <- Buzz_Master[Buzz_Master$Event_ID == 18, ]
-
-# Get Start_Time and End_Time
-start_time_18 <- event_id_18$Start_Time
-end_time_18 <- event_id_18$End_Time
-
-# Print Start_Time and End_Time for verification
-print(paste("Start Time:", start_time_18))
-print(paste("End Time:", end_time_18))
-
-# Filter the AIS dataframe to find entries within the event's time range
-AIS_entries_in_event_18 <- AIS_3kRadius_2018Oct_2019March[AIS_3kRadius_2018Oct_2019March$UTC >= start_time_18 & 
-                                                            AIS_3kRadius_2018Oct_2019March$UTC <= end_time_18, ]
-
-# Print the filtered AIS entries
-View(AIS_entries_in_event_18)
-
-
-#################### NOW TRYING IT ON A LARGER SCALE ########################################
+#################### MAKING AN AIS EVENTS DATA FRAME  ########################################
+# this is not completely necessary but may be useful to have so remake this 
 
 # Initialize an empty dataframe for storing the filtered AIS data
 AIS_Events <- data.frame()
@@ -132,13 +116,13 @@ for (i in 1:nrow(Buzz_Master)) {
     end_time <- Buzz_Master$End_Time[i]
     event_id <- Buzz_Master$Event_ID[i]
     
-    print(paste("Processing Event_ID:", event_id, "Start:", start_time, "End:", end_time))
+    print(paste("Processing Event_ID:", event_id)) # sign of life 
     
     # Filter AIS data that falls between Start_Time and End_Time
     ais_filtered <- AIS_3kRadius_2018Oct_2019March[AIS_3kRadius_2018Oct_2019March$UTC >= start_time & 
                                                      AIS_3kRadius_2018Oct_2019March$UTC <= end_time, ]
     
-    print(paste("Matches found for Event_ID", event_id, ":", nrow(ais_filtered)))
+    print(paste("Matches found for Event_ID", event_id, ":", nrow(ais_filtered))) # sign of success 
     
     # Check if ais_filtered has any rows before adding Event_ID and appending
     if (nrow(ais_filtered) > 0) {
@@ -157,17 +141,238 @@ View(AIS_Events)
 ###################################################################################################################################
 #### NOW ADDING IN VESSEL TYPE PER MMSI NUMBER 
 
+## because these have NA in the columns they ALL need to be CONVERT INTO CHARACTERS FOR NA - integers and numbers will not work 
+Buzz_Master$mmsiNumber_1 <- as.character(Buzz_Master$mmsiNumber_1)
+Buzz_Master$mmsiNumber_2 <- as.character(Buzz_Master$mmsiNumber_2)
+Buzz_Master$mmsiNumber_3 <- as.character(Buzz_Master$mmsiNumber_3)
+Buzz_Master$mmsiNumber_4 <- as.character(Buzz_Master$mmsiNumber_4)
+Buzz_Master$mmsiNumber_5 <- as.character(Buzz_Master$mmsiNumber_5)
+Buzz_Master$mmsiNumber_6 <- as.character(Buzz_Master$mmsiNumber_6)
+Buzz_Master$mmsiNumber_7 <- as.character(Buzz_Master$mmsiNumber_7)
+Buzz_Master$mmsiNumber_8 <- as.character(Buzz_Master$mmsiNumber_8)
+Buzz_Master$mmsiNumber_9 <- as.character(Buzz_Master$mmsiNumber_9)
+
+Unique_mmsiNumbers_Oct2018$mmsiNumber <- as.character(Unique_mmsiNumbers_Oct2018$mmsiNumber)
+
+# check conversions 
 str(Buzz_Master)
 str(Unique_mmsiNumbers_Oct2018)
-
-## because these have NA in the columns they ALL need to be converted to characters - integers and numbers will not work 
-Buzz_Master$mmsiNumber_9 <- as.character(Buzz_Master$mmsiNumber_9)
-Unique_mmsiNumbers_Oct2018$mmsiNumber <- as.character(Unique_mmsiNumbers_Oct2018$mmsiNumber)
     
-## FIRST add in the new column - did not work without this for some reason 
+## FIRST add in the new column - did not work without this for some reason -- CHECK AND SEE IF NEEDS MORE COLUMNS WITH NEW DATA 
+Buzz_Master$mmsiNumber_Type_1 <- NA
+Buzz_Master$mmsiNumber_Type_2 <- NA
+Buzz_Master$mmsiNumber_Type_3 <- NA
+Buzz_Master$mmsiNumber_Type_4 <- NA
+Buzz_Master$mmsiNumber_Type_5 <- NA
+Buzz_Master$mmsiNumber_Type_6 <- NA
+Buzz_Master$mmsiNumber_Type_7 <- NA
+Buzz_Master$mmsiNumber_Type_8 <- NA
 Buzz_Master$mmsiNumber_Type_9 <- NA
 
-## THEN START THE LOOP 
+
+## THEN START THE LOOP -- NEEDS TO BE RUN FOR EACH MMSI NUMBER COLUMNS 
+
+####### mmsiNumber_1
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_1[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_1[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_1[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_1[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_1[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_2
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_2[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_2[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_2[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_2[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_2[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_3
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_3[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_3[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_3[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_3[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_3[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_4
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_4[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_4[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_4[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_4[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_4[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_5
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_5[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_5[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_5[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_5[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_5[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_6
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_6[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_6[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_6[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_6[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_6[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_7
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_7[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_7[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_7[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_7[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_7[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_8
+# Loop through each row in Buzz_Master to find vessel categories
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # Check mmsiNumber_1
+  if (!is.na(Buzz_Master$mmsiNumber_8[i])) {
+    
+    #adding in sign of life - nice to see that is is processing live and how many it is processing through 
+    print(paste("Processing mmsiNumber:", Buzz_Master$mmsiNumber_8[i]))
+    
+    # assign a temporary variable to the current mmsiNumber_1 integer 
+    mmsiTemp <- Buzz_Master$mmsiNumber_8[i]
+    
+    # Find the matching mmsiNumber in Unique_mmsiNumbers_Oct2018 - assinging another temporary variable
+    vessel_typeTemp <- Unique_mmsiNumbers_Oct2018$Vessel_Category[Unique_mmsiNumbers_Oct2018$mmsiNumber == mmsiTemp]
+    
+    # If a match is found, assign it to mmsiNumber_Type_1 in Buzz_Master
+    if (length(vessel_typeTemp) > 0) {
+      Buzz_Master$mmsiNumber_Type_8[i] <- vessel_typeTemp
+    } else {
+      Buzz_Master$mmsiNumber_Type_8[i] <- NA  # If no match, assign NA
+    }
+  }
+}  
+
+####### mmsiNumber_9
 # Loop through each row in Buzz_Master to find vessel categories
 for (i in 1:nrow(Buzz_Master)) {
       
@@ -192,17 +397,266 @@ for (i in 1:nrow(Buzz_Master)) {
   }
 }      
 
-## then remove temp variables - not necessary, just to declutter 
-remove()
-  
 ################################################################################################################################### 
-## FINALLY ADDING IN AVERAGE SPEED PER MMSI NUMBER PER EVENT 
+####### FINALLY ADDING IN AVERAGE SPEED PER MMSI NUMBER PER EVENT 
 
-str(AIS_Events)
+## check if this is numeric - if not convert with as.numeric
+AIS_Events$speedOverGround <- as.numeric(AIS_Events$speedOverGround)
 
 # Adding in the columns ahead of time to make it easier 
+Buzz_Master$mmsiNumber_Speed1 <- NA
+Buzz_Master$mmsiNumber_Speed2 <- NA
+Buzz_Master$mmsiNumber_Speed3 <- NA
+Buzz_Master$mmsiNumber_Speed4 <- NA
+Buzz_Master$mmsiNumber_Speed5 <- NA
+Buzz_Master$mmsiNumber_Speed6 <- NA
+Buzz_Master$mmsiNumber_Speed7 <- NA
+Buzz_Master$mmsiNumber_Speed8 <- NA
 Buzz_Master$mmsiNumber_Speed9 <- NA
 
+############################ NOW RUN THE LOOPS FOR EACH INDIVIDUAL MMSI NUMBER COLUMN ############################
+
+########## mmsiNumber_1
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_1[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed1[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed1[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_2
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_2[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed2[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed2[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_3
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_3[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed3[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed3[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_4
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_4[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed4[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed4[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_5
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_5[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed5[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed5[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_6
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_6[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed6[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed6[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_7
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_7[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed7[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed7[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_8
+## NOW STARTING THE LOOP 
+for (i in 1:nrow(Buzz_Master)) {
+  
+  # CREATE TEMP VARIABLE - Get the Event_ID and mmsiNumber_1 for the current row
+  current_event_id <- Buzz_Master$Event_ID[i]
+  current_mmsi <- Buzz_Master$mmsiNumber_8[i]
+  
+  # ADDING SIGN OF LIFE 
+  print(paste("Processing Event ID:", Buzz_Master$Event_ID[i]))
+  
+  # Only proceed if mmsiNumber_1 is not NA
+  if (!is.na(current_mmsi)) {
+    
+    # CREATE COMPARISON - Find matching rows in AIS_Events for the current Event_ID and mmsiNumber
+    matching_ais_entries <- AIS_Events[AIS_Events$Event_ID == current_event_id & 
+                                         AIS_Events$mmsiNumber == current_mmsi, ]
+    # If there are matching rows, calculate the average speed
+    if (nrow(matching_ais_entries) > 0) {
+      avg_speed <- mean(matching_ais_entries$speedOverGround, na.rm = TRUE)
+      
+      # Assign the average speed to mmsiNumber_Speed1 in Buzz_Master
+      Buzz_Master$mmsiNumber_Speed8[i] <- avg_speed
+    } else {
+      # If no matches, assign NA
+      Buzz_Master$mmsiNumber_Speed8[i] <- NA
+    }
+  }
+}
+
+########## mmsiNumber_9
 ## NOW STARTING THE LOOP 
 for (i in 1:nrow(Buzz_Master)) {
   
