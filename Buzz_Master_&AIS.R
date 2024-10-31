@@ -1,19 +1,68 @@
 ###################################################################################################################################
-### VARIOUS EDITING TO THE BUZZ MASTER DATABASE ONCE CREATED ### 
+### GENERAL BUZZ MASTER EDITING AND AIS JOIN  ### 
 ###################################################################################################################################
 
-## TO DISTINGUISH CLICK TRAINS WHICH HAVE BUZZES FROM THOSE THAT DO NOT 
-Buzz_Master$Buzz_Train <- ifelse(Buzz_Master$Buzz_Clicks >= 6, 'YES', 'NO')
+## NOTE: this series of code needs the raw AIS_3k csv file (called AIS_3kRadius_2018Oct_2019March)
+## also needs the unique mmsi numbers csv to lookup vessel type 
 
-## PROPORTION OF CLICKS WHICH ARE BUZZES IN EACH TRAIN
+## NOTE: Buzz_Master_OLD is the dataframe before rerunning to correct criteria, Buzz_Master is the NEWEST, corrected version 
+## combined_df_buzz is currently called Buzz_Master but that may need to change based on the larger database 
+
+Buzz_Master <- read.csv("combined_df_buzz.csv", header = TRUE, sep = ",")
+View(Buzz_Master)
+
+## remove the first events (from each database) which have NA for everything 
+Buzz_Master <- Buzz_Master %>%
+  filter(!is.na(buzz_calls))
+
+## Ensuring that Start_Time and End_Time columns are in datetime format 
+Buzz_Master$Start_Time <- as.POSIXct(Buzz_Master$Start_Time, format="%Y-%m-%d %H:%M:%S")
+Buzz_Master$End_Time <- as.POSIXct(Buzz_Master$End_Time, format="%Y-%m-%d %H:%M:%S")
+
+str(Buzz_Master)
+
+## Re-generating unique Event_ID numbers for each event based on Start_Time
+Buzz_Master <- Buzz_Master %>%
+  arrange(Start_Time) %>% 
+  mutate(Event_ID = row_number())  # Generate a new Event_ID starting from 1
+
+###################################################################################################################################
+### NOW ADDING SOME OF THE ADDITIONAL COLUMNS 
+
+### Creating a column that gives the duration of the click event in seconds
+Buzz_Master$Click_Train_Length <- as.numeric(difftime(Buzz_Master$End_Time, Buzz_Master$Start_Time, units = "secs"))
+
+## TO DISTINGUISH CLICK TRAINS WHICH HAVE BUZZES FROM THOSE THAT DO NOT 
+Buzz_Master$Buzz_Train <- ifelse(Buzz_Master$Buzz_Clicks >= 6, '1', '0')
+
+# now do the same for scan clicks
+Buzz_Master$Scan_Train <- ifelse(Buzz_Master$Scan_Clicks >= 6, '1', '0')
+
+## PROPORTION OF CLICKS WHICH ARE BUZZES IN EACH TRAIN - did not do this second time 
 
 Buzz_Master$Buzz_to_Total_Percentage <- Buzz_Master$Buzz_Rate*100
 
 # rounding decimal places to 2 
 Buzz_Master$Buzz_to_Total_Percentage <- round(Buzz_Master$Buzz_to_Total_Percentage, 2)
 
-### Creating a column that gives the duration of the click event in seconds
-Buzz_Master$Click_Train_Length <- as.numeric(difftime(Buzz_Master$End_Time, Buzz_Master$Start_Time, units = "secs"))
+## Creating an additional column to categorize the MAXIMUM type (scan trains have NO or <6 buzz clicks)
+Buzz_Master <- Buzz_Master %>%
+  mutate(Click_Train_Type = case_when(
+    Buzz_Train == 1 ~ "Buzz",
+    Scan_Train == 1 & Buzz_Train == 0 ~ "Scan",
+    Buzz_Train == 0 & Scan_Train == 0 ~ "Presence"
+  ))
+
+## Now doing the same to create a column to categorize vessel presence
+Buzz_Master <- Buzz_Master %>%
+  mutate(Vessel_Exposure = case_when(
+    Exposure_3k == 1 & Exposure_500m == 0 ~ "Exposure",
+    Exposure_500m == 1 & Exposure_3k == 1 ~ "Max Exposure",
+    Exposure_3k == 0 & Exposure_500m == 0 ~ "No Exposure"
+   ))
+
+Vessel_Exposure_Event_Counts <- table(Buzz_Master$Vessel_Exposure)
+View(Vessel_Exposure_Event_Counts)
 
 ###################################################################################################################################
 ####### BRIEF COUNT STATISTICS 
@@ -46,22 +95,9 @@ print(head(Buzz_Master$End_Time, 10))
 
 print(head(AIS_3kRadius_2018Oct_2019March$UTC, 10))
 
-## create new mmsiNumber columns -- DO NOT NEED TO DO THIS 
-Buzz_Master$mmsiNumber_1 <- NA
-Buzz_Master$mmsiNumber_2 <- NA
-Buzz_Master$mmsiNumber_3 <- NA
-Buzz_Master$mmsiNumber_4 <- NA
-Buzz_Master$mmsiNumber_5 <- NA
-Buzz_Master$mmsiNumber_6 <- NA
-Buzz_Master$mmsiNumber_7 <- NA
-Buzz_Master$mmsiNumber_8 <- NA
-Buzz_Master$mmsiNumber_9 <- NA
-
-
 ## make sure mmsiNumbers are in numeric format 
 AIS_3kRadius_2018Oct_2019March$mmsiNumber <- as.numeric(AIS_3kRadius_2018Oct_2019March$mmsiNumber)
 
-###################################################################################################################################
 ############################## NOW START THE LOOP TO LOOK FOR MMSI NUMBERS THAT MATCH ##############################
 
 # Loop through each event in Buzz_Master
@@ -134,8 +170,7 @@ for (i in 1:nrow(Buzz_Master)) {
     }
   }
 }
-
-### CREATED A NEW DATAFRAME WITH ALL AIS DATA FROM DIFFERENT EVENTS -- STILL COULD BE USEFUL 
+  
 View(AIS_Events)
 
 ###################################################################################################################################
