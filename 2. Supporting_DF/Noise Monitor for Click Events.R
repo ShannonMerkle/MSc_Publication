@@ -129,12 +129,9 @@ ggplot(data = event_59_bands, aes(x = UTC, y = Noise_Level, color = Frequency_Ba
 
 ## TEST MODEL 
 
-<<<<<<< HEAD:supporting r scripts/Noise Monitor for Click Events.R
 model <- lm(ThirdOctave_561_709_mean ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
 summary(model)
-=======
-TESTmodel <- lm(ThirdOctave_447_561_median + ThirdOctave_447_561_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
-summary(TESTmodel)
+
 
 ### Looking at the large variance in the ambient category 
 
@@ -145,6 +142,3 @@ sd(ambient_data$ThirdOctave_709_894_mean)
 
 
 
-
-
->>>>>>> updating scripts:Noise Monitor for Click Events.R
