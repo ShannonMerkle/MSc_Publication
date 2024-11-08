@@ -292,6 +292,19 @@ gam_model_ToD_Season_VesselExposure_interaction <- gam(Event_Count ~ factor(Time
 
 summary(gam_model_ToD_Season_VesselExposure_interaction) ## INTERACTION HELPS A LOT!!    
 
+######################################################################################################################
+## BUZZ CLICK TRAINS VS VESSEL EXPOSURE 
+
+library(mgcv)
+gam_Buzz_Train <- gam(Buzz_Train ~ Vessel_Exposure + factor(Time_of_day) * factor(Season) + s(Hour, bs = "cs") , family = binomial(), data = Buzz_Master)
+summary(gam_Buzz_Train)
+
+glm_Buzz_Train <- glm(Buzz_Train ~ Vessel_Exposure, family = binomial(), data = Buzz_Master)
+summary(glm_Buzz_Train)
+
+# + s(Season) + s(Time_of_day) - get error when there are smoothers - too few categories (k =4)
+str(Buzz_Master)
+Buzz_Master$Buzz_Train <- as.numeric(Buzz_Master$Buzz_Train)
 
 ######################################################################################################################
 ##############################################   - DATA SUBSET -  ###################################################
@@ -312,7 +325,17 @@ summary(noise_lm)
 
 
 
-noise_lm <- lm(ThirdOctave_2236_2806_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_709_894_median ~ Noise_Exposure * Vessel_Count + Average_Speed, data = Buzz_Noise_Monitor_Oct2018)
+summary(noise_lm)
+
+noise_gam <- gam(ThirdOctave_709_894_median ~ Noise_Exposure * Vessel_Count + Average_Speed, data = Buzz_Noise_Monitor_Oct2018)
+summary(noise_gam)
+
+## right now these models have very significant results for all variables, but the explained variance is very low, 
+  # meaning there is a lot more going on than what the variables are describing,
+  # which is expected based on biological and ambient noise variation 
+  # BUT WHAT TO DO ABOUT THAT??
+
 
 
 

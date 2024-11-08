@@ -721,10 +721,24 @@ for (i in 1:nrow(Buzz_Master)) {
     }
 }
 
+##########################################################################################################################
+### GETTING A VESSEL COUNT FOR EACH CLICK EVENT 
 
+## vessel count
+Buzz_Master$Vessel_Count <- rowSums(!is.na(Buzz_Master[ , paste0("mmsiNumber_", 1:9)]))
 
+## average vessel speed of all present vessels
+Buzz_Master$Average_Speed <- rowMeans(Buzz_Master[ , paste0("mmsiNumber_Speed", 1:9)], na.rm = TRUE)
 
+# convert speed NaN to NA
+Buzz_Master$Average_Speed[is.nan(Buzz_Master$Average_Speed)] <- NA
 
+####### ADDING THESE COLUMNS TO THE NOISE MONITOR EVENT DATA FOR MODELING 
+# Merging Vessel_Count and Average_Speed columns from Buzz_Master into Vessel_Presence by Event_ID
+Buzz_Noise_Monitor_Oct2018 <- merge(Buzz_Noise_Monitor_Oct2018, 
+                         Buzz_Master[ , c("Event_ID", "Vessel_Count", "Average_Speed")], 
+                         by = "Event_ID", 
+                         all.x = TRUE)
 
 
 

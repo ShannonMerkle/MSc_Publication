@@ -111,11 +111,21 @@ ggplot(dataframe, aes(x= X_data, y = Y_data))+
 ################################################################################################################# 
 
 ## IF YOU WANT TO SAVE A DATAFRAME IN A PHYSICAL FORMAT ## then you can push this up to GitHub and will save in project folder
-saveRDS(Buzz_Master, "Buzz_Master_20241015")
+saveRDS(DataFrame_Name, "New_File_Name.rds")
+
+## !! IMPORTANT: needs .rds in the file name or it will not save correctly!! 
+
+saveRDS(Buzz_Noise_Monitor_Oct2018, "Buzz_Noise_Monitor_Oct2018.rds")
+
+## then read the RDS back in as a dataframe: 
+# can click on the object in the project files (of RStudio) or use command 
+readRDS("Buzz_Noise_Monitor_Oct2018.rds")
 
 ################################################################################################################# 
 ############## SQLITE CONNECTION #################
 ################################################################################################################# 
+
+## SEE SQLITE CONNECTION FILE IN MSc_Publication R Project for detailed notes and examples 
 
 # FIRST 
 # NEED TO CONNECT TO THE DATABASE
@@ -145,10 +155,5 @@ collect() ## another way to read tables into R and assign a dataframe
 ##copy token clipboard (and best to copy to text file)
 ## Input token code into the first popup AND INTO THE USERNAME AND PASSWORD POPUPS (even though this is really dumb)
 
-## TO SAVE DATAFRAME INTO GITHUB
-  # FIRST
-    ## save dataframe as physical RDS file -- will go into Rproject 
-saveRDS(Buzz_Master, "Buzz_Master_20241015")
-  # SECOND
-    ## Then you should see it in the Git tab and be able to stage-commit-Git Push 
+## See GITHUB notes script for more detailed notes on pushes/pulls/merges/rebase etc
 
