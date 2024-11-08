@@ -54,7 +54,7 @@ library(dplyr)
 
 # Remove all median columns -- MAKE A BACKUP OF THE DATAFRAME FIRST JUST IN CASE 
 Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
-  select(-contains("_median"))
+  select(-contains("_mean"))
 
 # remove all low95 columns -- but maybe this is something we want to use??
 Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
@@ -129,5 +129,22 @@ ggplot(data = event_59_bands, aes(x = UTC, y = Noise_Level, color = Frequency_Ba
 
 ## TEST MODEL 
 
+<<<<<<< HEAD:supporting r scripts/Noise Monitor for Click Events.R
 model <- lm(ThirdOctave_561_709_mean ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
 summary(model)
+=======
+TESTmodel <- lm(ThirdOctave_447_561_median + ThirdOctave_447_561_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+summary(TESTmodel)
+
+### Looking at the large variance in the ambient category 
+
+ambient_data <- subset(Buzz_Noise_Monitor_Oct2018, Noise_Exposure == "Ambient")
+summary(ambient_data$ThirdOctave_709_894_mean)
+
+sd(ambient_data$ThirdOctave_709_894_mean)
+
+
+
+
+
+>>>>>>> updating scripts:Noise Monitor for Click Events.R

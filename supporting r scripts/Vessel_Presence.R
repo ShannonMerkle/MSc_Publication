@@ -101,6 +101,33 @@ for (j in 1:nrow(Buzz_Master)) {
   Vessel_Presence$Event_ID[matching_rows] <- event_id
 }
 
+################################################################################################
+## NEED TO REMOVE THE TIMES WHEN AIS NOT RECORDING - should have done this earlier
+
+### creating a variable of dates to remove 
+range1 <- seq(as.Date("2019-03-29"), as.Date("2019-12-31"), by = "day")
+range2 <- seq(as.Date("2020-01-01"), as.Date("2020-05-11"), by = "day")
+
+# Combine the two ranges into one variable 'To_remove'
+To_remove <- c(range1, range2)
+
+# Print the result
+print(To_remove)
+
+str(Vessel_Presence)
+Vessel_Presence$datetime <- as.POSIXct(Vessel_Presence$datetime, tz = "UTC")
+
+# Extract the date part of the datetime column
+Vessel_Presence$date_only <- as.Date(Vessel_Presence$datetime)
+
+# Filter out rows where the date part matches any date in 'To_remove'
+Vessel_Presence_filtered <- Vessel_Presence[!Vessel_Presence$date_only %in% To_remove, ]
+
+# Optionally, remove the temporary 'date_only' column
+Vessel_Presence_filtered$date_only <- NULL
+
+
+
 ################################################################################################3
 ## BASIC DESCRIPTIVE STATS ## 
 
@@ -112,14 +139,77 @@ VesselPresenceTOTAL <- Vessel_Presence %>%
   summarise(Count = n()) %>%
   ungroup()
 
-## not really sure if this is right 
-1700700 # total minutes 
-1669369 # vessel absence 
-31331 # vessel presence 
+print(VesselPresenceTOTAL)
 
-1669369 / 1700700
-31331 /  1700700
+## modified for filtered dataframe 
+1110300 # total minutes 
+834014 # vessel absence 
+276286 # vessel presence 
 
+834014/1110300 # 75% of the time 
+276286/1110300 # 25% of the time 
+
+#############################
+## ADDING TEMPORAL ELEMENT 
+
+#ToD
+Vessel_Presence$Hour <- as.numeric(Vessel_Presence$Hour)
+str(Vessel_Presence)
+
+Vessel_Presence$Time_of_day <-with(Vessel_Presence, ifelse(Hour %in% c(12,13, 14, 15, 16, 17), "DAY",
+                                                   ifelse(Hour %in% c(18, 19, 20, 21, 22, 23), "EVENING",
+                                                          ifelse(Hour %in% c(00,01, 02, 03, 04, 05), "NIGHT",
+                                                                 ifelse(Hour %in% c(06, 07, 08, 09, 10, 11), "MORNING", NA))))) 
+# season
+Vessel_Presence$Month <- as.numeric(Vessel_Presence$Month)
+str(Vessel_Presence)
+
+Vessel_Presence$Season <- with(Vessel_Presence, ifelse(Month %in% c(12, 1, 2), "WINTER",
+                                               ifelse(Month %in% c(3, 4, 5), "SPRING",
+                                                      ifelse(Month %in% c(6, 7, 8), "SUMMER",
+                                                             ifelse(Month %in% c(9, 10, 11), "AUTUMN", NA)))))
+
+## now getting visual for vessel presence/absence based on diurnal cycle 
+
+## now making a variable for Time of Day 
+Vessel_Presence_plot_variable_ToD <- Vessel_Presence %>%
+  group_by(Time_of_day, Vessel_3k) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+
+# Create the bar plot
+ggplot(Vessel_Presence_plot_variable_ToD , aes(x = Time_of_day, y = Count, fill = Vessel_3k)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Vessel Presence on Diurnal Cycle", 
+       x = "Time of Day", 
+       y = "Number of Vessels", 
+       fill = "Vessels in Exposure Zone") +
+  theme_minimal()
+
+#######
+
+Vessel_Presence_plot_variable_Season <- Vessel_Presence %>%
+  group_by(Season, Vessel_3k) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+# Create the bar plot
+ggplot(Vessel_Presence_plot_variable_Season , aes(x = Season, y = Count, fill = Vessel_3k)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Vessel Presence Seasonally", 
+       x = "Season", 
+       y = "Number of Vessels", 
+       fill = "Vessels in Exposure Zone") +
+  theme_minimal()
+
+
+
+### temporal stats - EACH TOTAL WILL BE 277560
+# Morning: 176547 (63%), 101013 (36%) 
+# Day: 180647 (65%), 96913 (34%)
+# Evening: 232680 (83%) , 44880 (16%) 
+# Night: 244140 (88%), 33480 (12%)
 
 ################################################################################################
 ## TRY THIS AGAIN WITH A SUBSET 

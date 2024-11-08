@@ -212,10 +212,107 @@ gam_model_ToD_Season_HourSmoother_interaction <- gam(Event_Count ~ s(Hour, bs = 
 
 summary(gam_model_ToD_Season_HourSmoother_interaction)
 
-##################### MODELS WITH HOUR SMOOTHER AND VESSEL IMPACT #####################
+## 2.3 GAM with ToD and Season plus INTERACTION, no smoother 
+gam_model_ToD_Season_interaction <- gam(Event_Count ~ factor(Time_of_day) * factor(Season),
+                                                     data = gam_event_counts_ToD_Hour_Season, 
+                                                     family = poisson(link = "log"))
+
+summary(gam_model_ToD_Season_interaction)
 
 
 
+
+
+############################# MODELS FOR VESSEL PRESENCE #################################
+
+# FIRST MAKE SURE EVERYTHING IS A FACTOR 
+Vessel_Presence$Season <- factor(Vessel_Presence$Season)
+Vessel_Presence$Time_of_day <- factor(Vessel_Presence$Time_of_day)
+Vessel_Presence$Vessel_3k <- as.factor(Vessel_Presence$Vessel_3k)
+
+str(Vessel_Presence)
+
+## CREATE A BINARY COLUMN FOR PORPOISE EVENT ID 
+Vessel_Presence$Porpoise_Event <- ifelse(Vessel_Presence$Event_ID > 0, 1, 0)
+
+################### MODELS ###########################
+
+## 3.1 GAM just looking at vessel presence impacted by temporal patters 
+gam_model_VesselPresence_ToD_Season <- gam(Vessel_3k ~ Season + Time_of_day,
+                           family = binomial(link = "logit"),
+                           data = Vessel_Presence)
+
+summary(gam_model_VesselPresence_ToD_Season)
+
+
+## 3.2 GAM now looking at porpoise events with vessel presence alone 
+gam_model_PorpoiseEvent_VesselPresence <- gam(Porpoise_Event ~ Vessel_3k,
+                                              family = binomial(link = "logit"),
+                                              data = Vessel_Presence)
+
+summary(gam_model_PorpoiseEvent_VesselPresence) # SIG BUT VERY LITTLE DEVIANCE EXPLAINED 
+
+
+## 3.3 Now full GAM with Porpoise events, vessel presence, and seasonal patterns
+gam_model_PorpoiseEvent_VesselPresence_Season_ToD <- gam(Porpoise_Event ~ Vessel_3k + 
+                                                factor(Season) + factor(Time_of_day),
+                                              family = binomial(link = "logit"),
+                                              data = Vessel_Presence)
+
+summary(gam_model_PorpoiseEvent_VesselPresence_Season_ToD) # MOST SIG BUT AGAIN LITTLE DEVIANCE EXPLAINED
+
+
+## 3.4 Same as above but + INTERACTION
+gam_model_PorpoiseEvent_VesselPresence_Season_ToD_interaction <- gam(Porpoise_Event ~ Vessel_3k * factor(Time_of_day) + 
+                                                         factor(Season),
+                                                         family = binomial(link = "logit"),
+                                                         data = Vessel_Presence)
+
+summary(gam_model_PorpoiseEvent_VesselPresence_Season_ToD_interaction) # still very significant but model fit 
+
+################################ MODELS WITH VESSEL IMPACT ##################################
+
+gam_even_counts_ToD_Hour_Season_VesselExposure <- Buzz_Master %>% 
+  group_by(Hour, Time_of_day, Season, Vessel_Exposure) %>%
+  summarise(Event_Count = n())
+
+## 4.1 Basic GAM with Vessel Exposure, ToD, Season, and no interactions
+gam_model_ToD_Season_VesselExposure <- gam(Event_Count ~ factor(Time_of_day) + 
+                                             factor(Season) + factor(Vessel_Exposure),
+                                           data = gam_even_counts_ToD_Hour_Season_VesselExposure, 
+                                           family = poisson(link = "log"))
+
+summary(gam_model_ToD_Season_VesselExposure) ## Adjusted R-Sq and Deviance Explained drop substantially - model complexity 
+          
+## 4.2 same variable as above plus an INTERACTION                               
+gam_model_ToD_Season_VesselExposure_interaction <- gam(Event_Count ~ factor(Time_of_day) * factor(Vessel_Exposure) + 
+                                             factor(Season),
+                                           data = gam_even_counts_ToD_Hour_Season_VesselExposure, 
+                                           family = poisson(link = "log"))                                          
+
+summary(gam_model_ToD_Season_VesselExposure_interaction) ## INTERACTION HELPS A LOT!!    
+
+
+######################################################################################################################
+##############################################   - DATA SUBSET -  ###################################################
+
+
+############### NOISE MONITOR AND VESSEL VS AMBIENT #############
+
+noise_lm <- lm(ThirdOctave_447_561_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_561_709_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_709_894_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_894_1118_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_1118_1414_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_1414_1788_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_1788_2236_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+noise_lm <- lm(ThirdOctave_2236_2806_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
+
+summary(noise_lm)
+
+
+
+noise_lm <- lm(ThirdOctave_2236_2806_median ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
 
 
 
