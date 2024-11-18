@@ -5,26 +5,26 @@
 
 ###################################################################################################################################
 ## ADDING MONTH AND HOUR COLUMNS TO THE MASTER DATASET 
-Buzz_Master <- read.csv("buzz_MASTER.csv", header = TRUE, sep = ",")
-View(Buzz_Master)
+#Buzz_Master <- read.csv("Buzz_MASTER_UPDATED.csv", header = TRUE, sep = ",")
+#View(Buzz_Master)
 
-Buzz_Master <- Buzz_Master %>% 
-  mutate(Month = format(as.Date(Start_Time, format= "%Y-%m-%d %H:%M:%S"), "%m"))
+#Buzz_Master <- Buzz_Master %>% 
+#  mutate(Month = format(as.Date(Start_Time, format= "%Y-%m-%d %H:%M:%S"), "%m"))
 
-Buzz_Master <- Buzz_Master %>% 
+#Buzz_Master <- Buzz_Master %>% 
   mutate(Hour = format(as.POSIXct(Start_Time, format="%Y-%m-%d %H:%M:%S"), "%H"))
 
 
 ###################################################################################################################################
 #### SEASONAL CLASSIFICATION - based on criteria from original paper 
 
-Buzz_Master$Month <- as.numeric(Buzz_Master$Month)
-str(Buzz_Master)
+#Buzz_Master$Month <- as.numeric(Buzz_Master$Month)
+#str(Buzz_Master)
 
-Buzz_Master$Season <- with(Buzz_Master, ifelse(Month %in% c(12, 1, 2), "WINTER",
-                             ifelse(Month %in% c(3, 4, 5), "SPRING",
-                                    ifelse(Month %in% c(6, 7, 8), "SUMMER",
-                                           ifelse(Month %in% c(9, 10, 11), "AUTUMN", NA)))))
+#Buzz_Master$Season <- with(Buzz_Master, ifelse(Month %in% c(12, 1, 2), "WINTER",
+                             #ifelse(Month %in% c(3, 4, 5), "SPRING",
+                              #      ifelse(Month %in% c(6, 7, 8), "SUMMER",
+                               #            ifelse(Month %in% c(9, 10, 11), "AUTUMN", NA)))))
 
 
 
@@ -36,6 +36,7 @@ Buzz_Master$Season <- with(Buzz_Master, ifelse(Month %in% c(12, 1, 2), "WINTER",
 # 17:00 - 22:59 CEST = Dusk
 # 23:00 - 04:59 CEST = Night 
 
+## UTC conversions -- jsut remember to convert back for discussions and note daylights savings time 
 # 06:00 - 11:59 = Dawn
 # 12:00 - 17:59 = Day 
 # 18:00 - 23:59 = Dusk 
@@ -45,10 +46,10 @@ Buzz_Master$Hour <- as.numeric(Buzz_Master$Hour)
 str(Buzz_Master)
 
 ## SAME CODE BUT FOR TIME OF DAY - AS UTC!!
-Buzz_Master$Time_of_day <-with(Buzz_Master, ifelse(Hour %in% c(12,13, 14, 15, 16, 17), "DAY",
-                                                                     ifelse(Hour %in% c(18, 19, 20, 21, 22, 23), "EVENING",
-                                                                            ifelse(Hour %in% c(00,01, 02, 03, 04, 05), "NIGHT",
-                                                                                   ifelse(Hour %in% c(06, 07, 08, 09, 10, 11), "MORNING", NA)))))                                                                    
+#Buzz_Master$Time_of_day <-with(Buzz_Master, ifelse(Hour %in% c(12,13, 14, 15, 16, 17), "DAY",
+ #                                                                    ifelse(Hour %in% c(18, 19, 20, 21, 22, 23), "EVENING",
+  #                                                                          ifelse(Hour %in% c(00,01, 02, 03, 04, 05), "NIGHT",
+   #                                                                                ifelse(Hour %in% c(06, 07, 08, 09, 10, 11), "MORNING", NA)))))                                                                    
 
 #################################################################################################################################
 ####### QUICK DATA VISUALIZATION #################
@@ -73,6 +74,7 @@ View(Time_of_Day_Counts)
 
 ######### VERY BASIC HISTOGRAMS #############
 
+# these do not really work 
 hist(Buzz_Master$Hour)
 hist(Buzz_Master$Month)
 
@@ -95,7 +97,9 @@ ggplot(Buzz_Master,
 
 
 ################################################################################################################# 
+## GAM of seasonality ##
 
+seasonal_model1 <- gam(Total_clicks ~ , data = Buzz_Master)
 
 
 
