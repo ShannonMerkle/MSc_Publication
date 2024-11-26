@@ -127,18 +127,4 @@ ggplot(data = event_59_bands, aes(x = UTC, y = Noise_Level, color = Frequency_Ba
 
 ###################################################################################################################################
 
-## TEST MODEL 
-
-model <- lm(ThirdOctave_561_709_mean ~ Noise_Exposure, data = Buzz_Noise_Monitor_Oct2018)
-summary(model)
-
-
-### Looking at the large variance in the ambient category 
-
-ambient_data <- subset(Buzz_Noise_Monitor_Oct2018, Noise_Exposure == "Ambient")
-summary(ambient_data$ThirdOctave_709_894_mean)
-
-sd(ambient_data$ThirdOctave_709_894_mean)
-
-
 
