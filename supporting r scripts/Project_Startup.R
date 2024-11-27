@@ -28,6 +28,8 @@ library(dbplyr)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(nnet)
+library(mgcv)
 
 library(magrittr)
 library(lubridate)
