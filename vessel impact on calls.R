@@ -9,8 +9,6 @@ library(RSQLite)
 library(dbplyr)
 library(tidyverse)
 
-
-
 ## get master df
 db_master <- read.csv("Buzz_Master_UPDATED.csv")
 db_master$Exposure_3k <- as.factor(db_master$Exposure_3k)
@@ -46,10 +44,16 @@ plot(buzz_model2) ## looks okay
 ## Visualise
 db_3k_plot <- ggplot(db_master, aes(x = Exposure_3k, y = Buzz_Rate)) +
   geom_boxplot() +
+  labs(x = "Vessel Presence (within 3k)", y = "Buzz Rate") +
+  theme_minimal()
+
+db_500m_plot <- ggplot(db_master, aes(x = Exposure_500m, y = Buzz_Rate)) +
+  geom_boxplot() +
   labs(x = "Vessel Presence (within 500m)", y = "Buzz Rate") +
   theme_minimal()
 
 db_3k_plot
+db_500m_plot
 
 ## Print to working directory:
 tiff('db_buzz_test_signif_500m.tiff', units="in", width=6, height=4, res=1000, compression = 'lzw')
@@ -59,4 +63,5 @@ db_500m_plot
 dev.off()
 
 
-## Testing changes 
+#Impact of various variables
+
