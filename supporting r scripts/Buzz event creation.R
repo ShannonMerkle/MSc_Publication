@@ -1,8 +1,10 @@
+## Buzz master creation ##
+
+
 ## Packages to load
 library(dplyr)
 library(tibble)
 library(ggplot2)
-library(DBI)
 library(RSQLite)
 library(dbplyr)
 library(tidyverse)
@@ -154,41 +156,3 @@ for (i in seq_along(dfs)) {
 combined_df_buzz <- do.call(rbind, dfs)
 write.csv(combined_df_buzz, "combined_df_buzz.csv", row.names = FALSE)
 
-#############################################################################################################################
-## get master df
-db_master <- read.csv("C:/Users/Rachel Lennon/OneDrive - University of Glasgow/MSc/buzz_master.csv")
-db_master$Exposure_3k <- as.factor(db_master$Exposure_3k)
-db_master$Exposure_500m <- as.factor(db_master$Exposure_500m)
-
-db_exposure <- count(db_master, Exposure_500m)
-db_exposure2 <- count(db_master, Exposure_3k)
-
-
-## Model
-buzz_model1 <- lm(buzz_rate ~ Exposure_500m + Exposure_3k, data = db_master)
-summary(buzz_model1) ## not overdispersed
-
-buzz_model2 <- lm(buzz_rate ~ Exposure_3k, data = db_master)
-summary(buzz_model2)
-
-buzz_model3 <- lm(buzz_rate ~ Exposure_500m, data = db_master)
-summary(buzz_model3)
-
-
-plot(buzz_model1) ## looks okay 
-
-## visualise
-db_500m_plot <- ggplot(db_master, aes(x = Exposure_500m, y = buzz_rate)) +
-  geom_boxplot() +
-  labs(x = "Vessel Presence (within 500m)", y = "Buzz Rate") +
-  theme_minimal()
-
-## Print to working directory:
-tiff('db_buzz_test_signif_500m.tiff', units="in", width=6, height=4, res=1000, compression = 'lzw')
-
-db_500m_plot
-
-dev.off()
-
-
-## Testing changes 
