@@ -21,21 +21,26 @@ install.packages("xxx")
 library(xxx)
 
 # INSTALLING COMMON PACKAGES - do not need to install every time - check the packages list and see if they are already there
-install.packages('dplyr') 
+install.packages("pscl") 
 
 ## MUST LOAD PACKAGES IN EVERY TIME 
+library(DBI)
+library(RSQLite)
 library(dbplyr)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(nnet)
 library(mgcv)
-
-library(magrittr)
 library(lubridate)
+library(magrittr)
+library(gridExtra)
+library(patchwork)
+library(AER)
+library(car)
+library(pscl)
 
-library(DBI)
-library(RSQLite)
+
 
 # if you need to remove a package for any reason (updating etc) 
 detach()
@@ -58,6 +63,7 @@ dataframe$column_name <- NULL
 
 # RENAMING COLUMNS 
 colnames(data_frame_name)[colnames(data_frame_name) == "old_name"] <- "new_name" 
+
 
 # BULK REMOVE COLUMNS BASED ON A CRITERIA IN THE COLUMN NAME 
   library(dplyr)
@@ -116,6 +122,8 @@ saveRDS(DataFrame_Name, "New_File_Name.rds")
 ## !! IMPORTANT: needs .rds in the file name or it will not save correctly!! 
 
 saveRDS(Buzz_Noise_Monitor_Oct2018, "Buzz_Noise_Monitor_Oct2018.rds")
+saveRDS(Sound_Acq_TOTAL, "Sound_Acquisition_TOTAL.rds")
+
 
 ## then read the RDS back in as a dataframe: 
 # can click on the object in the project files (of RStudio) or use command 

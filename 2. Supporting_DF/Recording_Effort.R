@@ -2,52 +2,67 @@
 ##### DATA VISUALIZATION FOR RECORDING EFFORT #####
 ################################################################################################################# 
 
-## ***** NOTE THE NAME OF THE ORIGINAL DATAFRAME HAS CHANGED ********
-## was data_visualizaion_heatmap, modified into Total_Recording_Hours to be easier to work with 
+# DATAFRAMES
+Sound_Acq_TOTAL
+Recording_Effort
+Total_Recording_Effort
 
+## dataframes and tables have been cleaned significantly - all this code should work 
+################################################################################################################# 
+# MAKE A DATAFRAME WITH ALL POSSIBLE HOURS - Recording_Effort
 
+# Define the start and end dates
+start_date <- as.POSIXct("2018-10-08 00:00:00")
+end_date <- as.POSIXct("2021-12-31 23:59:59")
 
-### CREATING A NEW DATAFRAME WITH ALL DATES FOR GIVEN YEAR TO WORK WITH ### 
-# Define the start and end dates for the year
-start_date_all <- as.Date("2018-01-01")
-end_date_all <- as.Date("2021-12-31")
+# Generate a sequence of timestamps for every  in the date range
+timestamps <- seq(from = start_date, to = end_date, by = "hour")
 
-# Generate a sequence of dates for the entire year
-dates_all <- seq(from = start_date_all, to = end_date_all, by = "day")
+# Create a data frame from the timestamps
+Recording_Effort <- data.frame(
+  Year = format(timestamps, "%Y"),
+  Month = format(timestamps, "%m"),
+  Day = format(timestamps, "%d"),
+  Hour = format(timestamps, "%H")
+)
 
-# Create a dataframe with these dates
-data_visualization_heatmap <- data.frame(Date = dates_all)
+# CREATING A COHESIVE DATETIME COLUMN IN THE DATAFRAME
+Recording_Effort <- Recording_Effort %>%
+  mutate(UTC_hour = as.POSIXct(paste(Year, Month, Day, Hour, sep = "-"),
+                               format = "%Y-%m-%d-%H"))
+View(Recording_Effort)
 
-# Print the dataframe
-View(data_visualization_heatmap)
+#############################################################################################################################
+############## MAKING THE SOUND ACQUISITION ON DATAFRAME ##############
+# LOAD IN ALL SOUND ACQUISITION ON TABLES FROM THE SQLITE CONNECTION 
+# NOW CREATE ONE LARGE SOUND ACQUISITION DATAFRAME FROM ALL THE INDIVIDUALS FILES
 
-#################### next phase ########################
+Sound_Acq_TOTAL <- bind_rows(df1_df2_etc)
 
-# Ensure the Porpoise_2019$UTC is in Date format (convert if needed)
-Porpoise_2019$Date <- as.Date(Porpoise_2019$UTC)
+## lost this original code for some reason 
+## added in temporal columns - hour, month, ToD, Season although not really necessary
 
-# Add a new column 'Porpoise_Present' in date_df where 1 indicates a match and 0 indicates no match
-date_df$Porpoise_Present <- ifelse(date_df$Date %in% Porpoise_2019$UTC, 1, 0)
+# remove some of the unnecessary columns
+Sound_Acq_TOTAL$Server_Time <- NULL 
 
-# Print the updated dataframe
-print(date_df)
+ 
+######################################################################################### 
+# NOW CALCULATE RECORDING EFFORT BASED ON IF DATETIME PRESENT IN Sound_Acq_TOTAL
 
-############## version of this with all the dataframes together ##############
+str(Sound_Acq_TOTAL)
 
-# Convert the UTC column in each dataframe to just the date
-Sound_Acq_Sept2021$Date <- as.Date(Sound_Acq_Sept2021$UTC)
+Sound_Acq_TOTAL <- Sound_Acq_TOTAL %>%
+  mutate(UTC_hour = floor_date(UTC, "hour"))
 
-# Combine the dates from all three dataframes
-Total_Sound_Acq <- unique(c(Sound_Acq_Feb2021$Date, Sound_Acq_Jan2021$Date, Sound_Acq_May2020$Date, Sound_Acq_Oct2018$Date, Sound_Acq_Sept2020$Date, Sound_Acq_Sept2021$Date))
+## maybe do not need this bit??
+Recording_Effort <- Recording_Effort %>%
+  mutate(datetime = as.POSIXct(datetime, format="%Y-%m-%d %H:%M:%S", tz="UTC"))
 
-# Add a new column 'Porpoise_Present' to date_df, marking 1 if the date is present in any of the dataframes
-data_visualization_heatmap$Recording_Effort <- ifelse(data_visualization_heatmap$Date %in% Total_Sound_Acq, 1, 0)
+Recording_Effort$recording_effort <- ifelse(Recording_Effort$UTC_hour %in% Sound_Acq_TOTAL$UTC_hour, 1, 0)
 
-# Print the updated dataframe
-View(data_visualization_heatmap)
+############################################################################################ 
+## Manually remove those dates that recorded BUT WERE NOT USABLE DATA 
 
-
-### creating a variable of dates to change to 0 ###
 # Create the two date ranges
 range1 <- seq(as.Date("2019-03-29"), as.Date("2019-12-31"), by = "day")
 range2 <- seq(as.Date("2020-01-01"), as.Date("2020-05-11"), by = "day")
@@ -55,55 +70,84 @@ range2 <- seq(as.Date("2020-01-01"), as.Date("2020-05-11"), by = "day")
 # Combine the two ranges into one variable 'To_remove'
 To_remove <- c(range1, range2)
 
-# Print the result
-print(To_remove)
+# add a date formatted column to make it easier 
+Recording_Effort <- Recording_Effort %>%
+  mutate(Date = as.Date(paste(Year, Month, Day, sep = "-"), format = "%Y-%m-%d"))
 
-### Now set those dates to 0 ###
-
-data_visualization_heatmap$Recording_Effort <- ifelse(data_visualization_heatmap$Date %in% To_remove, 0, data_visualization_heatmap$Recording_Effort)
-
-################################################################################################################# 
-
-## NOW PREPPING TO PLOT THIS 
-
-# data_visualization_heatmap$Year <- as.Date(data_visualization_heatmap$Date, '%Y')
-data_visualization_heatmap$Day <- format(as.Date(data_visualization_heatmap$Date, format = '%Y-%m-%d'), '%d')
-View(data_visualization_heatmap)
+# Now remove them 
+Recording_Effort <- Recording_Effort %>%
+  mutate(recording_effort = ifelse(Date %in% To_remove, 0, recording_effort))
 
 
 ################################################################################################################# 
-## creating a different type of dataframe to work from - Total_Recording_Hours ###
+## CREATING DATAFRAME WITH ALL YEARS TOGETHER TO CALC RECORDING HOURS AND DAYS ###
 library(dplyr)
 
-Total_Recording_Hours <- data_visualization_heatmap %>%
+Total_Recording_Effort <- Recording_Effort %>%
   group_by(Month, Day) %>%
-  summarize(Total_Recording_Effort = sum(Recording_Effort, na.rm = TRUE))
+  summarize(Total_Recording_Hours = sum(recording_effort, na.rm = TRUE))
 
-View(Total_Recording_Hours)
+View(Total_Recording_Effort)
+
+Total_Recording_Effort <- Total_Recording_Effort %>%
+  mutate(Total_Recording_Day = ceiling(Total_Recording_Hours / 24))
+
+Total_Recording_Effort$Day <- as.numeric(Total_Recording_Effort$Day)
 
 ################################################################################################################# 
+## add seasonal and diurnal categories to Recording_Effort table
 
+str(Recording_Effort)
+Recording_Effort$Year <- as.numeric(Recording_Effort$Year)
+
+#Season
+Recording_Effort$Season <- with(Recording_Effort, ifelse(Month %in% c(12, 1, 2), "WINTER",
+                                               ifelse(Month %in% c(3, 4, 5), "SPRING",
+                                                      ifelse(Month %in% c(6, 7, 8), "SUMMER",
+                                                             ifelse(Month %in% c(9, 10, 11), "AUTUMN", NA)))))
+
+#ToD
+Recording_Effort$Time_of_day <-with(Recording_Effort, ifelse(Hour %in% c(12,13, 14, 15, 16, 17), "DAY",
+                                                   ifelse(Hour %in% c(18, 19, 20, 21, 22, 23), "EVENING",
+                                                          ifelse(Hour %in% c(00,01, 02, 03, 04, 05), "NIGHT",
+                                                                 ifelse(Hour %in% c(06, 07, 08, 09, 10, 11), "MORNING", NA)))))  
+
+
+################################################################################################################# 
 ############ FINAL HEATMAP PLOT ##################### 
 
 library(ggplot2)
+library(gridExtra)
 
-# THIS ONE LOOKS THE BEST RIGHT NOW 
-ggplot(Total_Recording_Hours, aes(x = Day, y = Month, fill = Total_Recording_Effort)) +
+Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y = Month, fill = Total_Recording_Day)) +
   geom_tile(color = "black") +
-  scale_fill_gradient(low = "gray95", high = "gray25") +
-  coord_fixed() 
+  scale_fill_stepsn(colors = c("gray95", "gray80", "gray60", "gray40", "gray25"),
+                    breaks = c(1, 2, 3, 4),
+                    limits = c(0, 4), # makes the legend solid instead of continuous gray scale 
+                    guide = guide_colorbar(frame.colour = "black", frame.linewidth = 0.2)) +
+  scale_x_continuous(breaks = 1:31, expand = c(0, 0)) +  # Remove space around tiles
+  scale_y_continuous(breaks = 1:12, expand = c(0, 0)) +  # Remove space around tiles
+  coord_fixed() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 0.5)) + # Add a frame
+  labs(fill = "Recording Days", title = "Recording Effort from 2018 through 2021") +
+  theme(text = element_text(family = "Times")) # change the font 
 
-## maybe on a different version of R this would look nicer??
-ggplot(Total_Recording_Hours, aes(x = Day, y = Month, fill = Total_Recording_Effort)) +
-  geom_tile(color = "black") +
-  scale_fill_gradient(low = "#b0c4de", high = "#000080") +
-  coord_fixed() 
+Recording_Effort_Heatmap_Plot
 
+## To add in the tables below the heatmap 
 
+# need to convert the tables to 'grobs'
 
+Recording_Table_Diurnal_GROB <- tableGrob(Recording_Table_Diurnal)
+Recording_Table_Seasonal_GROB <- tableGrob(Recording_Table_Season)
 
- 
+# this is the code that combines the heatmap plot with the tables - need to adjust names 
+grid.arrange(Recording_Effort_Heatmap_Plot,
+             arrangeGrob(Recording_Table_Seasonal_GROB, Recording_Table_Diurnal_GROB, ncol = 2),  # Tables side-by-side
+             ncol = 1, heights = c(4, 1))
 ################################################################################################################# 
+
+
 
 
 
