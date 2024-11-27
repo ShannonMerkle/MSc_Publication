@@ -265,4 +265,13 @@ VesselPresence_2021Jan_2021Feb_Count_AFTER <- Vessel_Presence_2021Jan_2021Feb %>
 print(VesselPresence_2021Jan_2021Feb_Count_BEFORE)
 print(VesselPresence_2021Jan_2021Feb_Count_AFTER)
 
+###########################################################################################################################
+
+
+
+
+
+
+
+
 

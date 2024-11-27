@@ -741,6 +741,21 @@ Buzz_Noise_Monitor_Oct2018 <- merge(Buzz_Noise_Monitor_Oct2018,
                          all.x = TRUE)
 
 
+##########################################################################################################################
+## SUBSET OF BUZZ_MASTER 
+
+# Create the subset for the specified date range
+Buzz_Oct2018_subset <- subset(
+  Buzz_Master,
+  Start_Time >= as.POSIXct("2018-10-08", tz = "UTC") & Start_Time <= as.POSIXct("2019-03-30", tz = "UTC")
+)
+
+View(Buzz_Oct2018_subset)
+  
+## MAKING A VESSEL TYPE COLUMN 
+
+vessel_hierarchy <- c("CARGO", "TANKER", "MILITARY", "TUG", "PILOT", "FISHING", "PASSENGER", "PLEASURE", "OTHER", "UNKNOWN")
+
 
 
 
