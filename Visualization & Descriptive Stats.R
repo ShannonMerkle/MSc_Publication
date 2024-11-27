@@ -5,16 +5,22 @@
 ############ FINAL RECORDING EFFORT HEATMAP ##################### 
 
 library(ggplot2)
+library(gridExtra)
 
-## ANNUAL RECORDING EFFORT HEATMAP 
-ggplot(Total_Recording_Hours, aes(x = Day, y = Month, fill = Total_Recording_Effort)) +
+Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y = Month, fill = Total_Recording_Day)) +
   geom_tile(color = "black") +
-  scale_fill_gradient(low = "gray95", high = "gray25") +
-  labs(title = "Annual Recording Effort", 
-       x = "Day", 
-       y = "Month", 
-       fill = "Years Recording Effort") +
-  coord_fixed() 
+  scale_fill_stepsn(colors = c("gray95", "gray80", "gray60", "gray40", "gray25"),
+                    breaks = c(1, 2, 3, 4),
+                    limits = c(0, 4), # makes the legend solid instead of continuous gray scale 
+                    guide = guide_colorbar(frame.colour = "black", frame.linewidth = 0.2)) +
+  scale_x_continuous(breaks = 1:31, expand = c(0, 0)) +  # Remove space around tiles
+  scale_y_continuous(breaks = 1:12, expand = c(0, 0)) +  # Remove space around tiles
+  coord_fixed() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 0.5)) + # Add a frame
+  labs(fill = "Recording Days", title = "Recording Effort from 2018 through 2021") +
+  theme(text = element_text(family = "Times")) # change the font 
+
+Recording_Effort_Heatmap_Plot
 
 
 ###################################################################################################################################
@@ -94,6 +100,10 @@ ggplot(event_counts_plot_variable_Vessel_Exposure, aes(x = Vessel_Exposure, y = 
 
 ##### RECORDING HOURS 
 
+
+# where did all of this code go??? 
+
+
 ## RENAMING HEADERS 
 Recording_Yearly_Table <- Recording_Yearly_Table %>% 
   rename(
@@ -124,7 +134,7 @@ Click_Event_Time_of_Day_Table <- Click_Event_Time_of_Day_Table %>%
 
 
 ### EXPORT AS PNG 
-png("Click Events Diurnal .png", width = 800, height = 600, res = 150) 
+png("Annual Recording Heatmap.png", width = 800, height = 600, res = 150) 
 
 grid.table(Click_Event_Time_of_Day_Table, rows = NULL)
 
@@ -136,8 +146,22 @@ dev.off()
 Vessel_Exposures_Total <- table(Buzz_Master$Vessel_Exposure)
 View(Vessel_Exposures_Total)
 
+### BAR PLOT OF BUZZ_TRAIN BINARY TO SEE HOW 0 INFLATED IT IS 
+# Count the occurrences of 1s and 0s in Buzz_Train
+buzz_train_counts <- table(Buzz_Master$Buzz_Train)
 
+# Plot the counts
+barplot(
+  buzz_train_counts,
+  main = "Counts of Buzz_Train Values",
+  xlab = "Buzz_Train",
+  ylab = "Count",
+  names.arg = c("0 (No Buzz)", "1 (Buzz)"),
+  col = c("skyblue", "orange")
+)
 
+# Optionally, print the counts for reference
+print(buzz_train_counts)
 
 
 
