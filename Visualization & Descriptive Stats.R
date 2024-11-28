@@ -79,6 +79,23 @@ ggplot(event_counts_plot_variable_Time_of_Day, aes(x = Time_of_day, y = Count, f
        fill = "Event Type") +
   theme_minimal()
 
+## NOW DOING THE SAME FOR DAY VS NIGHT 
+
+## now making a variable for Time of Day 
+event_counts_plot_variable_Daylight <- Buzz_Master %>%
+  group_by(Daylight, Click_Train_Type) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+# Daylight Plot
+ggplot(event_counts_plot_variable_Daylight, aes(x = Daylight, y = Count, fill = Click_Train_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Click Events During Daylight vs Darkness", 
+       x = "Daylight", 
+       y = "Number of Events", 
+       fill = "Event Type") +
+  theme_minimal()
+
 
 ######### CLICK TRAIN TYPE VS VESSEL EXPOSURE 
 
@@ -166,3 +183,23 @@ print(buzz_train_counts)
 
 
 
+
+######### PLOTTING RECORDING HOURS NEXT TO THE COUNT OF PORPOISE EVENTS (is this hourly bin or straight event counts?)
+# Melt the data for grouping
+stacked_data <- melt(Model_table_EvCounts_RecEffort_Month,
+                     id.vars = "Month",
+                     measure.vars = c("Event_Count", "Recording_Effort_Hours"),
+                     variable.name = "Type",
+                     value.name = "Count")
+
+# Plot with dodged bars
+ggplot(stacked_data, aes(x = Month, y = Count, fill = Type)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  scale_fill_manual(values = c("Event_Count" = "blue", "Recording_Effort_Hours" = "gray"),
+                    name = "Type",
+                    labels = c("Porpoise Events", "Recording Effort")) +
+  theme_minimal() +
+  labs(title = "Porpoise Click Events and Recording Effort by Month",
+       x = "Month",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
