@@ -2,7 +2,6 @@
 ### SEASONAL AND DIEL PRESENCE AND DISTRIBUTION ### 
 ###################################################################################################################################
 
-
 ###################################################################################################################################
 ## ADDING MONTH AND HOUR COLUMNS TO THE MASTER DATASET 
 Buzz_Master <- read.csv("buzz_MASTER.csv", header = TRUE, sep = ",")
@@ -98,6 +97,10 @@ ggplot(Buzz_Master,
 
 ################################################################################################################# 
 
+############## ADDING IN DAYLIGHT COLUMN WITH DAWN AND DUSK 
+
+# library(suncalc)
+
 ## Sunrise and Sunset 
 start_date <- as.Date("2018-10-01")
 end_date <- as.Date("2021-12-31")
@@ -111,22 +114,34 @@ View(Daylight_UTC)
 Daylight_UTC$UTC_Sunrise <- with_tz(Daylight_UTC$sunrise, tzone = "UTC")
 Daylight_UTC$UTC_Sunset <- with_tz(Daylight_UTC$sunset, tzone = "UTC")
 
+## SAME AS ABOVE BUT IN VESSEL_PRESENCE (backup)
+Vessel_Presence_bckup$UTC_Sunrise <- with_tz(Vessel_Presence_bckup$sunrise, tzone = "UTC")
+Vessel_Presence_bckup$UTC_Sunset <- with_tz(Vessel_Presence_bckup$sunset, tzone = "UTC")
+
 ## NOW TO COMBINE WITH BUZZ_MASTER 
 
 # first make sure the formatting of 
 Daylight_UTC <- Daylight_UTC %>%
   mutate(UTC_date = as.Date(date, format = "%Y-%m-%d"))
-# make a column in Buzz_Master with only date in it 
+
+# make a column in Buzz_Master with only date in it (same with Vessel Presence)
 Buzz_Master <- Buzz_Master %>%
   mutate(UTC_StartDate = as.Date(Start_Time))
 
-# Join 
+Vessel_Presence <- Vessel_Presence %>%
+  mutate(date = as.Date(datetime))
+
+# Join Buzz_Master 
 Buzz_MasterDaylight <- Buzz_Master %>%
   left_join(Daylight_UTC, by = c("UTC_StartDate" = "UTC_date"))
 View(Buzz_MasterDaylight)
 
-## THIS DOES NOT QUITE WORK - something is not quite right with the date lookup here 
-# Classify events as Day or Night
+# Join - SAME AS ABOVE BUT WITH VESSEL PRESENCE
+Vessel_Presence_bckup <- Vessel_Presence %>%
+  left_join(Daylight_UTC, by = c("date" = "UTC_date"))
+View(Vessel_Presence_bckup)
+
+# Classify events as Day or Night - this works now 
 Buzz_Master_backup <- Buzz_MasterDaylight %>%
   mutate(
     Daylight = case_when(
@@ -136,8 +151,17 @@ Buzz_Master_backup <- Buzz_MasterDaylight %>%
     )
   )
 
-
 View(Buzz_Master)
+
+## SAME FOR VESSEL_PRESENCE 
+Vessel_Presence_bckup <- Vessel_Presence_bckup %>%
+  mutate(
+    Daylight = case_when(
+      datetime >= UTC_Sunrise & datetime < UTC_Sunset ~ "Day",  # Between sunrise and sunset
+      datetime < UTC_Sunset | datetime >= UTC_Sunset ~ "Night",  # Before sunrise or after sunset
+      TRUE ~ NA_character_  # Catch any errors
+    )
+  )
 
 ### DAWN AND DUSK 
 
@@ -149,7 +173,21 @@ Buzz_Master <- Buzz_Master %>%
   ))
 View(Buzz_Master)
 
+# now with VESSEL_PRESENCE
+Vessel_Presence_bckup <- Vessel_Presence_bckup %>%
+  mutate(Dawn_Dusk = case_when(
+    datetime >= dawn & datetime <= UTC_Sunrise ~ "Dawn", 
+    datetime >= UTC_Sunset & datetime <= dusk ~ "Dusk", 
+    TRUE ~ NA_character_
+  ))
 
+# remove the unnecessar columns in Vessel_presece
+Vessel_Presence_bckup$night <- NULL
+
+# move over most recent to vessel presence and remove working copy
+Vessel_Presence_backup <- Vessel_Presence
+Vessel_Presence <- Vessel_Presence_bckup
+remove(Vessel_Presence_bckup)
 
 ## a little bit of column re-ordering
 
@@ -161,6 +199,7 @@ priority_cols <- c("Event_ID",
                    "End_Time", 
                    "Click_Train_Type",
                    "Click_Train_Length", 
+                   "Total_Minutes",
                    "Total_Clicks",
                    "Buzz_Clicks", 
                    "Buzz_Rate",
@@ -183,8 +222,11 @@ priority_cols <- c("Event_ID",
                    "Exposure_500m", 
                    "Vessel_Exposure",
                    "Vessel_Count",
-                   "Average_Speed"
+                   "Average_Speed", 
+                   "Vessel_Presence_Minutes",
+                   "Vessel_Overlap"
                   )
+
 
 
 

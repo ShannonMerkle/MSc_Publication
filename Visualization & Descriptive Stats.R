@@ -7,6 +7,7 @@
 library(ggplot2)
 library(gridExtra)
 
+# heatmap plot for recording DAYS - should we do hours or minutes on a more fluid scale?
 Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y = Month, fill = Total_Recording_Day)) +
   geom_tile(color = "black") +
   scale_fill_stepsn(colors = c("gray95", "gray80", "gray60", "gray40", "gray25"),
@@ -22,6 +23,58 @@ Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y =
 
 Recording_Effort_Heatmap_Plot
 
+###################################################################################################################################
+# PROPORTION OF PORPOISE POSITIVE MINUTES FOR DAY AND NIGHT and VESSEL POSITIVE MINUTES 
+
+## Daylight and Month table with proportion of Porpoise presence and proportion of vessel presence 
+Model_table_PorpoiseProportion_VesselPresence_Month_Daylight <- Vessel_Presence %>% 
+  group_by(Daylight, Month) %>%
+  summarise(
+    Total_Count = n(), 
+    Porpoise_Positive_Minutes = sum(Porpoise_Event), 
+    Vessel_Positive_Minutes = sum(Vessel_3k),
+    .groups = "drop"
+  )%>%
+  mutate(Proportion_Porpoise_Event = Porpoise_Positive_Minutes / Total_Count
+  )%>%
+  mutate(Proportion_Vessel_Presence = Vessel_Positive_Minutes / Total_Count
+  )
+
+View(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight)  
+
+# PLOT WITH PORPOISE POSITIVE MINUTES
+ggplot(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight, 
+       aes(x = Month, y = Proportion_Porpoise_Event, fill = Daylight)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  scale_fill_manual(values = c("Day" = "skyblue", "Night" = "darkblue")) +
+  scale_x_continuous(breaks = 1:12, expand = c(0, 0)) + # makes the x axis count in 12 parts sections instead of default 
+  labs(
+    title = "Proportion of Porpoise-Positive Minutes for Day and Night",
+    x = "Month",
+    y = "Proportion of Porpoise-Positive Minutes",
+    fill = "Daylight"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# PLOT WITH VESSEL POSITIVE MINUTES 
+ggplot(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight, 
+       aes(x = Month, y = Proportion_Vessel_Presence, fill = Daylight)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  scale_fill_manual(values = c("Day" = "skyblue", "Night" = "darkblue")) +
+  scale_x_continuous(breaks = 1:12, expand = c(0, 0)) + # makes the x axis count in 12 parts sections instead of default 
+  labs(
+    title = "Proportion of Vessel-Positive Minutes for Day and Night",
+    x = "Month",
+    y = "Proportion of Vessel-Positive Minutes",
+    fill = "Daylight"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ###################################################################################################################################
 ########### CLICK TRAIN TYPE - PLOTS ##############
@@ -97,6 +150,7 @@ ggplot(event_counts_plot_variable_Daylight, aes(x = Daylight, y = Count, fill = 
   theme_minimal()
 
 
+
 ######### CLICK TRAIN TYPE VS VESSEL EXPOSURE 
 
 event_counts_plot_variable_Vessel_Exposure <- Buzz_Master %>%
@@ -157,49 +211,7 @@ grid.table(Click_Event_Time_of_Day_Table, rows = NULL)
 
 dev.off()
 
-########### VESSEL EXPOSURE 
-
-# basic table 
-Vessel_Exposures_Total <- table(Buzz_Master$Vessel_Exposure)
-View(Vessel_Exposures_Total)
-
-### BAR PLOT OF BUZZ_TRAIN BINARY TO SEE HOW 0 INFLATED IT IS 
-# Count the occurrences of 1s and 0s in Buzz_Train
-buzz_train_counts <- table(Buzz_Master$Buzz_Train)
-
-# Plot the counts
-barplot(
-  buzz_train_counts,
-  main = "Counts of Buzz_Train Values",
-  xlab = "Buzz_Train",
-  ylab = "Count",
-  names.arg = c("0 (No Buzz)", "1 (Buzz)"),
-  col = c("skyblue", "orange")
-)
-
-# Optionally, print the counts for reference
-print(buzz_train_counts)
 
 
 
 
-
-######### PLOTTING RECORDING HOURS NEXT TO THE COUNT OF PORPOISE EVENTS (is this hourly bin or straight event counts?)
-# Melt the data for grouping
-stacked_data <- melt(Model_table_EvCounts_RecEffort_Month,
-                     id.vars = "Month",
-                     measure.vars = c("Event_Count", "Recording_Effort_Hours"),
-                     variable.name = "Type",
-                     value.name = "Count")
-
-# Plot with dodged bars
-ggplot(stacked_data, aes(x = Month, y = Count, fill = Type)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
-  scale_fill_manual(values = c("Event_Count" = "blue", "Recording_Effort_Hours" = "gray"),
-                    name = "Type",
-                    labels = c("Porpoise Events", "Recording Effort")) +
-  theme_minimal() +
-  labs(title = "Porpoise Click Events and Recording Effort by Month",
-       x = "Month",
-       y = "Count") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
