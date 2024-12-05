@@ -64,4 +64,32 @@ dev.off()
 
 
 #Impact of various variables
+buzz_model2 <- glm(Buzz_Train ~ Exposure_3k + Hour + factor(Month), data = db_master, family = binomial(link = "logit"))
+summary(buzz_model2)
+
+
+day_buzz <- glm(Buzz_Train ~ Time_of_day*Exposure_3k, data = db_master, family = binomial(link="logit"))
+summary(day_buzz)
+
+# visualise 
+ggplot(db_master, aes(x = Hour, y = Buzz_Train, color = Exposure_3k)) +
+  geom_smooth(method = "loess", se = FALSE) + # Smoothed lines for trends +
+  #facet_wrap(~ Season) + # Separate panels by season
+  scale_color_manual(values = c("1" = "red", "0" = "blue")) +
+  labs(
+    title = "Seasonal Trends in Buzz Proportion with Vessel Presence",
+    x = "Time of Day (Hour)",
+    y = "Buzz Rate",
+    color = "Vessel Presence"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    strip.text = element_text(face = "bold"),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+
+ggplot(vessel, aes(x = Hour, y = Vessel_3k)) +
+  geom_smooth(method = "loess", se = FALSE)
+
 
