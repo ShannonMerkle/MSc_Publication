@@ -9,53 +9,85 @@ library(tidyverse)
 library(lme4)
 
 ## Load df 
-daydf <- Vessel_Presence_20241203
+daydf <- temporal_df
+daydf2 <- Vessel_Presence_20241203
 
 ## Clean variable type 
-daydf$Porpoise_Event <- as.factor(daydf$Porpoise_Event)
-daydf$Daylight <- as.factor(daydf$Daylight)
-daydf$Month <- as.numeric(daydf$Month)
-daydf$Year <- as.numeric(daydf$Year)
+daydf2$Daylight <- as.factor(daydf2$Daylight)
+daydf2$Month <- as.numeric(daydf2$Month)
+daydf2$Year <- as.numeric(daydf2$Year)
+daydf2$Vessel_3k <- as.factor(daydf2$Vessel_3k)
 
 
-#####################################################
-## Full model #######################################
+## Temporal trends #######################################
 
+#QUESTION#
 ## When are porpoises most active in a day - does that vary by season? and 
 ## when are porpoises most active within a year and does that vary between years?
 
-## When are porpoises most active in a day?
-model1 <- glm(Porpoise_Event ~ Daylight*factor(Month) + (1|Year) ,data = daydf, 
-              family = binomial(link="logit"))
-
+## Proportion of porpoise events:
+# By daylight
+model1 <- glm(Proportion_Porpoise_Event ~ Daylight,data = daydf)
 summary(model1) 
-# Porpoises more active at night, true across all season and between years
-# except May where they are more active in the day?
 
-## Visualise
-ggplot(daydf, aes(x = Daylight, y = Porpoise_Event, color = factor(Month))) +
-  labs(
-    x = "Daylight",
-    y = "Porpoise Event (0/1)",
-    color = "Month"
-  ) +
-  theme_minimal()
+## By season
+model2 <- glm(Proportion_Porpoise_Event ~ factor(Month),data = daydf)
+summary(model2) 
 
+## Does daylight activity change by season?
+model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
+summary(model3)
 
-# binomial events over month and between times with a correlation structure by year
-model1 <- gam(Porpoise_Event ~ s(Month, bs = "cc", by = Daylight) + Daylight, 
-               data = daydf, family = binomial(link = "logit"))
-summary(model1) ## more vocal at night than day 
-plot(model1)
+## Weighted porpoise minutes by recorder effort: - more data retained in model
+## GAM of season by year
+modelgam <- gam(Porpoise_Event ~ s(Month, bs = "cc", by = Daylight) + Daylight, 
+                data = daydf2, weights = Recording_Effort)
+summary(modelgam)
+plot(modelgam)
 
-# same as model1 but with a correlation structure and year variable 
-model2 <- gamm(Porpoise_Event ~ s(Month, bs = "cc", by = Daylight) + Daylight
-                         + year, 
-                         data = daydf, family = binomial(link = "logit"), 
-                         correlation = corARMA(form = ~ 1|Year, p = 1))
-                         
-
-## When do porpoises overlap with vessel the most a) in a day?, b) across a year?
+## GLM of season and year with a random effect of year 
+model4 <- glm(Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf2,
+              family = binomial(link = "logit"),
+              weights = Recording_Effort)
+summary(model4)
+## They vocalise more at night (stderror = 0.02, z = 46.82, p < 0.001), this is 
+## consistent across seasons and throughout years. They vocalise the most between 
+## spring - autumn, but less so in the winter. 
 
 
+## Vessel temporal trends ####################################
 
+## GLM of season and year with a random effect of year 
+modelv1 <- glm(Vessel_3k ~ factor(Month)*Daylight + (1|Year), data = daydf2,
+              family = binomial(link = "logit"),
+              weights = Recording_Effort)
+summary(modelv1)
+
+## Vessel are present less in the night than the day, this is true across season and year. 
+## They are most present from July - September. 
+
+## Vessel overlap #######################################
+
+#QUESTION#
+## When do vessels overlap with porpoise presence - in a day, - in a season? Does this 
+## change across years?
+
+## Create an overlap column
+daydf2 <- Vessel_Presence_20241203
+daydf2$Overlap <- ifelse(daydf2$Porpoise_Event > 0 & daydf2$Vessel_3k > 0, 1, 0)
+daydf3 <- filter(daydf2, Porpoise_Event == 1)
+daydf3$Overlap <- as.factor(daydf3$Overlap)
+daydf3$Year <- as.numeric(daydf3$Year)
+
+## GLM of season and year with a random effect of year 
+moodelvo <- glm(Overlap ~ factor(Month)*Daylight + (1|Year), data = daydf3, 
+                family = binomial(link="logit"), 
+                weights = Recording_Effort)
+
+summary(moodelvo)
+
+#####################################################
+
+count <- count(Vessel_Presence_20241203, Recording_Effort, Porpoise_Event)
+weirdo <- filter(Vessel_Presence_20241203, Recording_Effort == 0)
+weirdo <- filter(weirdo, Porpoise_Event == 1)
