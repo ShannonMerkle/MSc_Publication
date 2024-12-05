@@ -39,7 +39,7 @@ library(patchwork)
 library(AER)
 library(car)
 library(pscl)
-
+library(suncalc)
 
 
 # if you need to remove a package for any reason (updating etc) 
@@ -72,6 +72,11 @@ Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
   select(-contains("_low95"))
 ## its a good idea to make a backup dataframe just in case this removes something important by accident 
 
+# BULK IDENTIFY OBJECTS IN ENVIRONMENT BASED ON NAMING PATTERN 
+ls(pattern = "^Model_table_EvCounts")
+
+# BULK REMOVE OBJECTS IN ENVIRONMENT BASED ON NAMING PATTERN - check the above first and make sure you want to remove!
+rm(list = ls(pattern = "^Model_table"))
 
 
 ################################################################################################################# 
@@ -124,6 +129,8 @@ saveRDS(DataFrame_Name, "New_File_Name.rds")
 saveRDS(Buzz_Noise_Monitor_Oct2018, "Buzz_Noise_Monitor_Oct2018.rds")
 saveRDS(Sound_Acq_TOTAL, "Sound_Acquisition_TOTAL.rds")
 
+saveRDS(Total_Recording_Effort, "Summary_Recording_Effort.rds")
+
 
 ## then read the RDS back in as a dataframe: 
 # can click on the object in the project files (of RStudio) or use command 
@@ -161,8 +168,8 @@ collect() ## another way to read tables into R and assign a dataframe
 # Make repository in GitHub if not already existing 
 # then copy the information for existing bit not the TERMINAL window of R (Below...not the console)
 # will ask for username and password but this will not work, must use TOKEN ... will likely need to create a new token in Github
-## create token go to github profile..settings..scroll all the way to the bottom left..<> Developer Settings ....Create new Tokem
-##copy token clipboard (and best to copy to text file)
+## create token go to github profile..settings..scroll all the way to the bottom left..<> Developer Settings ....Create new Token
+## copy token clipboard (and best to copy to text file)
 ## Input token code into the first popup AND INTO THE USERNAME AND PASSWORD POPUPS (even though this is really dumb)
 
 ## See GITHUB notes script for more detailed notes on pushes/pulls/merges/rebase etc

@@ -2,10 +2,14 @@
 ##### DATA VISUALIZATION FOR RECORDING EFFORT #####
 ################################################################################################################# 
 
+##### NOTE: THIS SCRIPT MAKES A RECORDING EFFORT ON AN HOURLY TIMEBIN, 
+  ### RECORDING EFFORT HAS BEEN ADDED TO VESSEL PRESENCE ON A MINUTE TIME BIN!!! 
+
 # DATAFRAMES
 Sound_Acq_TOTAL
-Recording_Effort
-Total_Recording_Effort
+Recording_Effort # hourly recording effort across all years
+Total_Recording_Effort # summary of recording hours of all years together 
+Vessel_Presence # has recording effort on minute time bin 
 
 ## dataframes and tables have been cleaned significantly - all this code should work 
 ################################################################################################################# 
@@ -58,6 +62,7 @@ Sound_Acq_TOTAL <- Sound_Acq_TOTAL %>%
 Recording_Effort <- Recording_Effort %>%
   mutate(datetime = as.POSIXct(datetime, format="%Y-%m-%d %H:%M:%S", tz="UTC"))
 
+## ASSIGNING HOURS PRESENCE IN Sound_Acq_TOTAL AS RECORDING EFFORT IN DATAFRAME - hourly timebin 
 Recording_Effort$recording_effort <- ifelse(Recording_Effort$UTC_hour %in% Sound_Acq_TOTAL$UTC_hour, 1, 0)
 
 ############################################################################################ 
@@ -93,6 +98,28 @@ Total_Recording_Effort <- Total_Recording_Effort %>%
   mutate(Total_Recording_Day = ceiling(Total_Recording_Hours / 24))
 
 Total_Recording_Effort$Day <- as.numeric(Total_Recording_Effort$Day)
+
+## ADDING IN TOTAL RECORDING MINUTES FROM THE VESSEL PRESENCE DATAFRAME
+
+# add in Year to group_by if you want to examine each year individually 
+Vessel_Presence_Summary <- Vessel_Presence %>%
+  group_by(Month, Day) %>%
+  summarize(Total_Recording_Minutes = sum(Recording_Effort), .groups = "drop")
+View(Vessel_Presence_Summary)
+
+# had to make sure all day and month entires were integers (or number, just consistent with each other)
+
+# joining the two together 
+Total_Recording_Effort <- Total_Recording_Effort %>%
+  left_join(Vessel_Presence_Summary, by = c("Month", "Day"))
+
+# adding a 0 to any that had no recording minutes (NA)
+Total_Recording_Effort$Total_Recording_Minutes[is.na(Total_Recording_Effort$Total_Recording_Minutes)] <- 0
+
+
+
+
+
 
 ################################################################################################################# 
 ## add seasonal and diurnal categories to Recording_Effort table

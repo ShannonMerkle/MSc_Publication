@@ -2,6 +2,10 @@
 ### ALL ADVANCED STATS AND MODELING ### 
 ###################################################################################################################################
 
+# CLEANING UP TABLES FOR THIS SECTION 
+remove(list = ls(pattern = "^Model_table_Rec"))
+ls(pattern = "^Model_table_Rec")
+
 ###################### Model summaries ##########################
 
 ####### TEMPORAL MODELS - GAMS
@@ -51,7 +55,6 @@ summary(gam_model_PorpoiseEvent_VesselPresence_Season_MonthlySmoother_ToD_intera
 
 summary(gam_model_PorpoiseEvent_VesselPresence_HourSmoother_MonthlySmoother)
 summary(gam_model_PorpoiseEvent_VesselPresence_HourSmoother_MonthlySmoother_interaction)
-
 
 
 ###################################################################################################################################
@@ -193,6 +196,8 @@ Model_table_EvCounts_Hour_Month <- Buzz_Master %>%
   group_by(Hour, Month) %>%
   summarise(Event_Count = n())
 
+
+
 View(Model_table_EvCount_ToD_Month)
 View(Model_table_EvCount_ToD_Season_Month)
 View(Model_table_EvCount_Hour_Month)
@@ -256,6 +261,24 @@ dispersiontest(gam_poisson_ToD_Season_interaction_MonthlySmoother)
 
 # TABLES WITH EVENT COUNTS AND RECORDING HOURS PLUS TEMPORAL VARIABLES 
 
+## MONTH
+  # Recording Effort - Month 
+Model_table_RecEffort_Month <- Recording_Effort %>%
+  group_by(Month) %>%
+  summarise(Recording_Effort_Hours = sum(recording_effort))
+  # Event Counts - Month 
+Model_table_EvCounts_Month <- Buzz_Master %>%
+  group_by(Month) %>%
+  summarise(Event_Count = n())
+  # Join - Month 
+Model_table_EvCounts_RecEffort_Month <- Model_table_EvCounts_Month %>%
+  left_join(Model_table_RecEffort_Month, by = c( "Month"))
+  # Proportion column 
+Model_table_EvCounts_RecEffort_Month$Event_Proportion <- 
+  Model_table_EvCounts_RecEffort_Month$Event_Count / Model_table_EvCounts_RecEffort_Month$Recording_Effort_Hours
+
+View(Model_table_EvCounts_RecEffort_Month)
+
 # table ToD and Season
 Model_table_RecEffort_ToD_Season <- Recording_Effort %>%
   group_by(Time_of_day, Season) %>%
@@ -286,6 +309,11 @@ Model_table_RecEffort_ToD_Season_Month<- Recording_Effort %>%
   group_by(Time_of_day, Season, Month) %>%
   summarise(Recording_Effort_Hours = sum(recording_effort))
 
+# Table Season and Daylight 
+Model_table_RecEffort_Season_Daylight <- Recording_Effort %>%
+  group_by(Time_of_day, Season, Month) %>%
+  summarise(Recording_Effort_Hours = sum(recording_effort))
+
 View(Model_table_RecEffort_Hour_Month)
 View(Model_table_RecEffort_ToD_Season)
 View(Model_table_RecEffort_ToD_Hour_Season)
@@ -302,6 +330,7 @@ View(Model_table_EvCounts_RecEffort_ToD_Season)
 
 View(Model_table_EvCounts_Hour_ToD_Season)
 View(Model_table_RecEffort_ToD_Hour_Season)
+
 # Join for ToD, Hour, and Season 
 Model_table_EvCounts_RecEffort_ToD_Hour_Season <- Model_table_EvCounts_Hour_ToD_Season %>%
   left_join(Model_table_RecEffort_ToD_Hour_Season, by = c("Time_of_day", "Hour", "Season"))
@@ -513,7 +542,7 @@ View(Model_table_PorpoisePresence_VesselPresence_ToD_Month)
 #############################################################################################################################
 ######### GAMS WITH POISSON DISTRIBUTION 
 
-## 4.1 GAM just looking at vessel presence impacted by temporal patters 
+## 4.1 GAM just looking at vessel presence impacted by temporal patterns 
 gam_poisson_VesselPresence_ToD_Season <- gam(Vessel_3k_Present ~ Season + Time_of_day,
                            family = poisson(link = "log"),
                            data = Model_table_VesselPresence_ToD_Season)

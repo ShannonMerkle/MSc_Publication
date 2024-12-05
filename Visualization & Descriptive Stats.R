@@ -7,6 +7,7 @@
 library(ggplot2)
 library(gridExtra)
 
+# heatmap plot for recording DAYS - should we do hours or minutes on a more fluid scale?
 Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y = Month, fill = Total_Recording_Day)) +
   geom_tile(color = "black") +
   scale_fill_stepsn(colors = c("gray95", "gray80", "gray60", "gray40", "gray25"),
@@ -22,6 +23,58 @@ Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y =
 
 Recording_Effort_Heatmap_Plot
 
+###################################################################################################################################
+# PROPORTION OF PORPOISE POSITIVE MINUTES FOR DAY AND NIGHT and VESSEL POSITIVE MINUTES 
+
+## Daylight and Month table with proportion of Porpoise presence and proportion of vessel presence 
+Model_table_PorpoiseProportion_VesselPresence_Month_Daylight <- Vessel_Presence %>% 
+  group_by(Daylight, Month) %>%
+  summarise(
+    Total_Count = n(), 
+    Porpoise_Positive_Minutes = sum(Porpoise_Event), 
+    Vessel_Positive_Minutes = sum(Vessel_3k),
+    .groups = "drop"
+  )%>%
+  mutate(Proportion_Porpoise_Event = Porpoise_Positive_Minutes / Total_Count
+  )%>%
+  mutate(Proportion_Vessel_Presence = Vessel_Positive_Minutes / Total_Count
+  )
+
+View(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight)  
+
+# PLOT WITH PORPOISE POSITIVE MINUTES
+ggplot(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight, 
+       aes(x = Month, y = Proportion_Porpoise_Event, fill = Daylight)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  scale_fill_manual(values = c("Day" = "skyblue", "Night" = "darkblue")) +
+  scale_x_continuous(breaks = 1:12, expand = c(0, 0)) + # makes the x axis count in 12 parts sections instead of default 
+  labs(
+    title = "Proportion of Porpoise-Positive Minutes for Day and Night",
+    x = "Month",
+    y = "Proportion of Porpoise-Positive Minutes",
+    fill = "Daylight"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# PLOT WITH VESSEL POSITIVE MINUTES 
+ggplot(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight, 
+       aes(x = Month, y = Proportion_Vessel_Presence, fill = Daylight)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  scale_fill_manual(values = c("Day" = "skyblue", "Night" = "darkblue")) +
+  scale_x_continuous(breaks = 1:12, expand = c(0, 0)) + # makes the x axis count in 12 parts sections instead of default 
+  labs(
+    title = "Proportion of Vessel-Positive Minutes for Day and Night",
+    x = "Month",
+    y = "Proportion of Vessel-Positive Minutes",
+    fill = "Daylight"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ###################################################################################################################################
 ########### CLICK TRAIN TYPE - PLOTS ##############
@@ -78,6 +131,24 @@ ggplot(event_counts_plot_variable_Time_of_Day, aes(x = Time_of_day, y = Count, f
        y = "Number of Events", 
        fill = "Event Type") +
   theme_minimal()
+
+## NOW DOING THE SAME FOR DAY VS NIGHT 
+
+## now making a variable for Time of Day 
+event_counts_plot_variable_Daylight <- Buzz_Master %>%
+  group_by(Daylight, Click_Train_Type) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+# Daylight Plot
+ggplot(event_counts_plot_variable_Daylight, aes(x = Daylight, y = Count, fill = Click_Train_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Click Events During Daylight vs Darkness", 
+       x = "Daylight", 
+       y = "Number of Events", 
+       fill = "Event Type") +
+  theme_minimal()
+
 
 
 ######### CLICK TRAIN TYPE VS VESSEL EXPOSURE 
@@ -140,28 +211,6 @@ grid.table(Click_Event_Time_of_Day_Table, rows = NULL)
 
 dev.off()
 
-########### VESSEL EXPOSURE 
-
-# basic table 
-Vessel_Exposures_Total <- table(Buzz_Master$Vessel_Exposure)
-View(Vessel_Exposures_Total)
-
-### BAR PLOT OF BUZZ_TRAIN BINARY TO SEE HOW 0 INFLATED IT IS 
-# Count the occurrences of 1s and 0s in Buzz_Train
-buzz_train_counts <- table(Buzz_Master$Buzz_Train)
-
-# Plot the counts
-barplot(
-  buzz_train_counts,
-  main = "Counts of Buzz_Train Values",
-  xlab = "Buzz_Train",
-  ylab = "Count",
-  names.arg = c("0 (No Buzz)", "1 (Buzz)"),
-  col = c("skyblue", "orange")
-)
-
-# Optionally, print the counts for reference
-print(buzz_train_counts)
 
 
 

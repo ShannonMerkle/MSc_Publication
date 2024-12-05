@@ -3,6 +3,9 @@
 ###################################################################################################################################
 ## ALL CODE NECESSARY FOR CREATING AND EDITING THE VESSEL_PRESENCE DATAFRAME FOR VESSEL POSITIVE MINUTES
 
+# this dataframe ultimately gives you vessel positive minutes AND porpoise positive minutes based on the event start/end time
+  # ADDING RECORDING EFFORT IN MINUTE FORMAT TO THIS TO GET A COMPLETELY EVEN TIME BIN
+
 
 # PACKAGES USED IN THIS NOTEBOOK 
 library(dplyr)
@@ -49,6 +52,7 @@ Vessel_Presence$Vessel_500m <- NA
 AIS_3kRadius_Master <- AIS_3kRadius_Master %>%
   filter(!is.na(datetime))
 
+## NOW START THE LOOP TO PAIR VESSEL PRESENCE TO THE MINUTE - for 3k Vessel Exposure Radius 
 # Loop through each row of Vessel_Presence
 for (i in 1:nrow(Vessel_Presence)) {
   # Get the datetime for the current row
@@ -83,6 +87,7 @@ Vessel_Presence$Event_ID <- 0
 
 
 ## QUICKER VERSION OF THE ORIGINAL LOOP - looking at number of events instead of number of datetime rows
+  # ALSO DONE IN MINUTE TIME BINS - essentially gives you porpoise positive minutes based on event Click Event start/end times 
 
 # Start loop
 for (j in 1:nrow(Buzz_Master)) {
@@ -126,7 +131,21 @@ Vessel_Presence_filtered <- Vessel_Presence[!Vessel_Presence$date_only %in% To_r
 # Optionally, remove the temporary 'date_only' column
 Vessel_Presence_filtered$date_only <- NULL
 
+########################################################################################## 
+# CALCULATING RECORDING EFFORT MINUTES - this is based on the code from Recording_Effort but adapted to minute format 
 
+str(Sound_Acq_TOTAL)
+
+Sound_Acq_TOTAL <- Sound_Acq_TOTAL %>%
+  mutate(UTC_minute = floor_date(UTC, "minute"))
+
+
+## maybe do not need this bit??
+Recording_Effort <- Recording_Effort %>%
+  mutate(datetime = as.POSIXct(datetime, format="%Y-%m-%d %H:%M:%S", tz="UTC"))
+
+Vessel_Presence$Recording_Effort <- ifelse(Vessel_Presence$datetime %in% Sound_Acq_TOTAL$UTC_minute, 1, 0)
+View(Vessel_Presence)
 
 ################################################################################################3
 ## BASIC DESCRIPTIVE STATS ## 
@@ -169,16 +188,18 @@ Vessel_Presence$Season <- with(Vessel_Presence, ifelse(Month %in% c(12, 1, 2), "
                                                       ifelse(Month %in% c(6, 7, 8), "SUMMER",
                                                              ifelse(Month %in% c(9, 10, 11), "AUTUMN", NA)))))
 
-## now getting visual for vessel presence/absence based on diurnal cycle 
+################################################################################################
+## PLOTTING VESSEL PRESENCE/ABSENCE BASED ON TEMPORAL CATEGORIES 
+  ## these plots look good but the legend scale is weird
 
-## now making a variable for Time of Day 
+## ToD Table 
 Vessel_Presence_plot_variable_ToD <- Vessel_Presence %>%
   group_by(Time_of_day, Vessel_3k) %>%
   summarise(Count = n()) %>%
   ungroup()
 
 
-# Create the bar plot
+# plotting vessel presence vs ToD for vessel presence LAYERED with the larger overlapping the smaller (position)
 ggplot(Vessel_Presence_plot_variable_ToD , aes(x = Time_of_day, y = Count, fill = Vessel_3k)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Vessel Presence on Diurnal Cycle", 
@@ -187,14 +208,13 @@ ggplot(Vessel_Presence_plot_variable_ToD , aes(x = Time_of_day, y = Count, fill 
        fill = "Vessels in Exposure Zone") +
   theme_minimal()
 
-#######
-
+# Season table 
 Vessel_Presence_plot_variable_Season <- Vessel_Presence %>%
   group_by(Season, Vessel_3k) %>%
   summarise(Count = n()) %>%
   ungroup()
 
-# Create the bar plot
+# plotting vessel presence vs Season in LAYERED format 
 ggplot(Vessel_Presence_plot_variable_Season , aes(x = Season, y = Count, fill = Vessel_3k)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Vessel Presence Seasonally", 
@@ -212,63 +232,45 @@ ggplot(Vessel_Presence_plot_variable_Season , aes(x = Season, y = Count, fill = 
 # Night: 244140 (88%), 33480 (12%)
 
 ################################################################################################
-## TRY THIS AGAIN WITH A SUBSET 
 
-## testing the count: saving the number BEFORE EDITING the datetime column 
-start_date <- as.POSIXct("2021-01-01", tz = "UTC")
-end_date <- as.POSIXct("2021-02-28 23:59:59", tz = "UTC")
+# Table with PROPORTION, Vessel Presence, ToD, Hour, Season, Month 
+Model_table_PorpoiseProp_VesselPresence_ToD_Hour_Season_Month <- Vessel_Presence %>%
+  group_by(Time_of_day, Hour, Season, Month, Vessel_3k) %>%
+  summarise(
+    Total_Count = n(),
+    Porpoise_Present = sum(Porpoise_Event),
+    .groups = "drop"  # Ensures the result is an ungrouped dataframe
+  ) %>%
+  mutate(
+    Proportion_Porpoise_Event = Porpoise_Present / Total_Count
+  )
 
-VesselPresence_2021Jan_2021Feb_Count_BEFORE <- Vessel_Presence %>%
-  filter(datetime >= start_date & datetime <= end_date) %>%
-  summarize(count_1s = sum(Vessel_3k == 1))
-
-print(VesselPresence_2021Jan_2021Feb_Count_BEFORE)
-
-## editing the datetime column so seconds == :00
-
-AIS_3kRadius_Master <- AIS_3kRadius_Master %>%
-  mutate(datetime = as.POSIXct(format(UTC, "%Y-%m-%d %H:%M:00")))
-
-## create a subset of vessel presence and AIS_3kRadius_Master
-
-Vessel_Presence_2021Jan_2021Feb <- Vessel_Presence %>% 
-  filter(datetime >= start_date & datetime <= end_date)
-
-AIS_3k_subset <- AIS_3kRadius_Master %>%
-  filter(datetime >= start_date & datetime <= end_date)
-View(AIS_3k_subset)
-
-
-## now running on a subset of the 3k_AIS data 
-
-# Loop through each row of Vessel_Presence
-for (i in 1:nrow(Vessel_Presence_2021Jan_2021Feb)) {
-  # Get the datetime for the current row
-  current_datetime <- Vessel_Presence_2021Jan_2021Feb$datetime[i]
   
-  print(paste("Processing Time", current_datetime)) # sign of life 
-  
-  # Check for matches in AIS_3kRadius_Master
-  if (any(AIS_3k_subset$datetime == current_datetime)) {
-    Vessel_Presence_2021Jan_2021Feb$Vessel_3k[i] <- 1  # Mark 1 if a match is found
-  } else {
-    Vessel_Presence_2021Jan_2021Feb$Vessel_3k[i] <- 0  # Mark 0 if no match is found
-  }
-}
+################################################################################################
+#### WITH VESSEL PRESENCE ACTING AS MINUTE TIME BIN DATAFRAME 
+  ## Calculate the proportion of time each event spends with vessel present on a minute time bin 
 
-### now get a new count for these data 
+# Summarize the data to calculate the vessel overlap for each Event_ID
+Porpoise_Event_Vessel_Overlap <- Vessel_Presence %>%
+  group_by(Event_ID) %>%
+  summarize(
+    Total_Minutes = n(), # Total minutes for each Event_ID
+    Vessel_Presence_Minutes = sum(Vessel_3k), # Sum of Vessel_3k (vessel presence)
+    .groups = "drop" # Prevents grouped output
+  ) %>%
+  mutate(
+    Vessel_Overlap = (Vessel_Presence_Minutes / Total_Minutes) * 100, # Percentage overlap
+    Vessel_Any = ifelse(Vessel_Presence_Minutes > 0, 1, 0) # Binary indicator for any vessel presence
+  )
+View(Porpoise_Event_Vessel_Overlap)
 
-VesselPresence_2021Jan_2021Feb_Count_AFTER <- Vessel_Presence_2021Jan_2021Feb %>%
-  filter(datetime >= start_date & datetime <= end_date) %>%
-  summarize(count_1s = sum(Vessel_3k == 1))
-
-print(VesselPresence_2021Jan_2021Feb_Count_BEFORE)
-print(VesselPresence_2021Jan_2021Feb_Count_AFTER)
-
-###########################################################################################################################
-
-
-
+# now join to Buzz_Master
+Buzz_Master <- Buzz_Master %>%
+  left_join(
+    Porpoise_Event_Vessel_Overlap %>%
+      select(Event_ID, Total_Minutes, Vessel_Presence_Minutes, Vessel_Overlap), 
+    by = "Event_ID"
+  )
 
 
 
