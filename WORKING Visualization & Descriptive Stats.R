@@ -42,6 +42,28 @@ Model_table_PorpoiseProportion_VesselPresence_Month_Daylight <- Vessel_Presence 
 
 View(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight)  
 
+
+
+## second
+Model_table_PorpoiseProportion_VesselPresence_Month_Daylight_Vessel3k <- Vessel_Presence %>% 
+  group_by(Daylight, Month) %>%
+  summarise(
+    Total_Count = n(), 
+    Porpoise_Positive_Minutes = sum(Porpoise_Event), 
+    Porpoise_Positive_Minutes_Vessel = sum(Porpoise_Event * (Vessel_3k == 1)), # Count when Vessel_3k is 1
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Proportion_Porpoise_Event = Porpoise_Positive_Minutes / Total_Count *100
+  )%>%
+  mutate(
+    Proportion_Porpoise_Event_Vessel = Porpoise_Positive_Minutes_Vessel / Total_Count*100
+  )
+
+View(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight_Vessel3k)
+
+
+
 # PLOT WITH PORPOISE POSITIVE MINUTES
 ggplot(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight, 
        aes(x = Month, y = Proportion_Porpoise_Event, fill = Daylight)) +
@@ -76,6 +98,11 @@ ggplot(Model_table_PorpoiseProportion_VesselPresence_Month_Daylight,
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
+
+##### MAKE A FIGURE WITH DAY AND NIGHT PORPOISE EVENTS (minutes), 
+  # INSIDE THAT TOTAL BAR HAVE ONE BAR SHOWING EVENTS MINUTES WIHTOUT VESSELS AND ANOTHER BAR WITH MINUTES OVERLAPPING WITH VESSELS 
+  ## 
+
 ###################################################################################################################################
 ########### CLICK TRAIN TYPE - PLOTS ##############
 
@@ -94,44 +121,7 @@ Click_Event_Type_Total <- table(Buzz_Master$Click_Train_Type)
 View(Click_Event_Type_Total)
   
 
-########## TEMPORAL PLOTS ############
-
-#### SEASONAL PLOTS AGAINST CLICK TRAIN TYPE 
-
-# First make a variable to group the season to click train type 
-event_counts_plot_variable_Seasonal <- Buzz_Master %>%
-  group_by(Season, Click_Train_Type) %>%
-  summarise(Count = n()) %>%
-  ungroup()
-
-
-# Create the bar plot
-ggplot(event_counts_plot_variable_Seasonal, aes(x = Season, y = Count, fill = Click_Train_Type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Click Events per Season", 
-       x = "Season", 
-       y = "Number of Events", 
-       fill = "Event Type") +
-  theme_minimal()
-
-
-#### DIURNAL PLOTS AGAINST CLICK TRAIN TYPE 
-
-## now making a variable for Time of Day 
-event_counts_plot_variable_Time_of_Day <- Buzz_Master %>%
-  group_by(Time_of_day, Click_Train_Type) %>%
-  summarise(Count = n()) %>%
-  ungroup()
-
-# Create the bar plot
-ggplot(event_counts_plot_variable_Time_of_Day, aes(x = Time_of_day, y = Count, fill = Click_Train_Type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Click Events per Time of Day", 
-       x = "Time of Day", 
-       y = "Number of Events", 
-       fill = "Event Type") +
-  theme_minimal()
-
+###########################################
 ## NOW DOING THE SAME FOR DAY VS NIGHT 
 
 ## now making a variable for Time of Day 
@@ -169,49 +159,128 @@ ggplot(event_counts_plot_variable_Vessel_Exposure, aes(x = Vessel_Exposure, y = 
 ###################################################################################################################################
 ################################# TABLES #################################
 
-##### RECORDING HOURS 
 
 
-# where did all of this code go??? 
 
-
-## RENAMING HEADERS 
-Recording_Yearly_Table <- Recording_Yearly_Table %>% 
-  rename(
-    "Recording Hours" = "Total_Recording_Hours"
-    )
-
-# SAVE THE TABLE AS A PNG - note it will save to the working directory - make sure that is the Project Folder 
-# need to run each of these lines individually 
-
-png("Recording Effort Yearly Table.png", width = 800, height = 600, res = 150) 
-
-grid.table(Recording_Yearly_Table, rows = NULL)
-
-dev.off()
-
-#### NOW FOR THE CLICK TRAIN EVENTS - ALL TYPES 
-
-## First you have to convert the values into dataframes 
-Click_Event_Seasonal_Table <- as.data.frame(Event_Seasonal_Counts)
-Click_Event_Time_of_Day_Table <- as.data.frame(Event_Time_of_Day_Counts)
-
-## now rename the column headers
-Click_Event_Time_of_Day_Table <- Click_Event_Time_of_Day_Table %>% 
-  rename(
-    "Time of Day" = Var1,
-    "Count of Events" = Freq
+######
+df_long <- Model_table_PorpoiseProportion_VesselPresence_Month_Daylight_Vessel3k %>%
+  pivot_longer(
+    cols = c(Proportion_Porpoise_Event, Proportion_Porpoise_Event_Vessel),
+    names_to = "Type",
+    values_to = "Count"
   )
 
+View(df_long)
 
-### EXPORT AS PNG 
-png("Annual Recording Heatmap.png", width = 800, height = 600, res = 150) 
+## BEST PLOT 
+ggplot(df_long, aes(x = Month, y = Count, fill = Type)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.6) +
+  facet_wrap(~Daylight, ncol = 1) +
+  scale_fill_manual(values = c("Proportion_Porpoise_Event" = "skyblue", "Proportion_Porpoise_Event_Vessel" = "navy")) +
+  scale_x_continuous(breaks = 1:12, expand = c(0, 0)) + 
+  labs(
+    title = "Porpoise Positive Minutes by Month and Daylight",
+    x = "Month",
+    y = "Count",
+    fill = "Type"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold")
+  )
 
-grid.table(Click_Event_Time_of_Day_Table, rows = NULL)
+########################################
+#### ATTEMPT NUMBER TWO AT A BARPLOT WITH BOTH DAYLIGHT CATEGORIES IN ONE PLOT - using sample data 
 
-dev.off()
+# Example data
+data <- data.frame(
+  Month = rep(1:12, each = 4),
+  Time_of_Day = rep(c("Daylight", "Night"), each = 2, times = 12),
+  Vessel_Presence = rep(c("With Vessels", "Without Vessels"), times = 24),
+  Minutes = sample(50:500, 48, replace = TRUE)
+)
+View(data)
+
+data$Month_Time <- interaction(data$Month, data$Time_of_Day, sep = " - ")
+data$Time_Month <- interaction(data$Time_of_Day, data$Month, sep = " - ")
+
+## this works!! same colors for each 
+ggplot(data, aes(x = factor(Time_Month), y = Minutes, fill = Vessel_Presence)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.6) +
+  labs(x = "Month - Time of Day", y = "Minutes", title = "Porpoise Minutes by Month and Time of Day",
+       fill = "Vessel Presence") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+## now adjusting so the colors are different based on time of day 
+time_colors <- c("Daylight" = "steelblue", "Night" = "darkorange")
+
+ggplot(data, aes(x = factor(Time_Month), y = Minutes, fill = Vessel_Presence)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.6, aes(color = Time_of_Day)) +
+  scale_fill_manual(values = c("With Vessels" = "lightgray", "Without Vessels" = "darkgray")) + # Fill for Vessel_Presence
+  scale_color_manual(values = time_colors) + # Outline color for Time_of_Day
+  labs(
+    x = "Time of Day - Month",
+    y = "Minutes",
+    title = "Porpoise Minutes by Month and Time of Day",
+    fill = "Vessel Presence",
+    color = "Time of Day"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
+##### now applying the above code to the actual data - making vessel presence a column for extra rows 
+test_df <- Vessel_Presence %>% 
+  group_by(Daylight, Month, Vessel_3k) %>%
+  summarise(
+    Total_Count = n(), 
+    Porpoise_Positive_Minutes = sum(Porpoise_Event), 
+    #Porpoise_Positive_Minutes_Vessel = sum(Porpoise_Event * (Vessel_3k == 1)), # Count when Vessel_3k is 1
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Percentage_PPM = Porpoise_Positive_Minutes / Total_Count *100
+  #)%>%
+  #mutate(
+    #Proportion_Porpoise_Event_Vessel = Porpoise_Positive_Minutes_Vessel / Total_Count*100
+  )
 
+View(test_df)
+test_df$Percentage_PPM <- round(test_df$Percentage_PPM, 2)
+
+test_df$Time_Month <- interaction(test_df$Daylight, test_df$Month, sep = " - ")
+test_df$Month_Time <- interaction(test_df$Month, test_df$Daylight, sep = " - ")
+
+# attempt plot with REAL test_df data - THIS WORKS 
+ggplot(test_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = Vessel_3k)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.6) +
+  labs(x = "Month - Daylight", y = "Minutes", title = "Porpoise Minutes by Month and Time of Day",
+       fill = "Vessel Presence") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# NOW ADJUST THE COLOR OF BARS - and legend 
+time_colors <- c("Day" = "darkorange", "Night" = "steelblue")
+
+## needed to set Vessel_3k as a factor instead of a number 
+test_df$Vessel_3k <- as.factor(test_df$Vessel_3k)
+
+# NEW PLOT - change position between dodge and stack, I think dodge is actually easier to read 
+ggplot(test_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = Vessel_3k)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.6, aes(color = Daylight)) +
+  scale_fill_manual(values = c("1" = "lightgray",  "0" = "darkgray")) + # Fill for Vessel_Presence
+  scale_color_manual(values = time_colors) + # Outline color for Time_of_Day
+  labs(
+    x = "Daylight by Month",
+    y = "Percentage of Porpoise Positive Minutes",
+    title = "Percentage of Porpoise Positive Minutes by Month and Daylight",
+    fill = "Vessel Presence",
+    color = "Time of Day"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 

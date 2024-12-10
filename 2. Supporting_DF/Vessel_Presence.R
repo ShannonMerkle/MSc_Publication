@@ -6,6 +6,9 @@
 # this dataframe ultimately gives you vessel positive minutes AND porpoise positive minutes based on the event start/end time
   # ADDING RECORDING EFFORT IN MINUTE FORMAT TO THIS TO GET A COMPLETELY EVEN TIME BIN
 
+## ALSO CALCULATING VESSEL OVERLAP AND ATTACHING TO Buzz_Master 
+
+
 
 # PACKAGES USED IN THIS NOTEBOOK 
 library(dplyr)
@@ -45,8 +48,9 @@ AIS_3kRadius_Master <- AIS_3kRadius_Master %>%
   mutate(datetime = as.POSIXct(format(UTC, "%Y-%m-%d %H:%M:00")))
 str(AIS_3kRadius_Master)
 
-## ADD RADIUS COLUMNS
+## ADD RADIUS COLUMNS - 3k and 500m
 Vessel_Presence$Vessel_500m <- NA
+Vessel_Presence$Vessel_3k <- NA
 
 ## must remove rows with NA in UTC/datetime first
 AIS_3kRadius_Master <- AIS_3kRadius_Master %>%
@@ -89,7 +93,7 @@ Vessel_Presence$Event_ID <- 0
 ## QUICKER VERSION OF THE ORIGINAL LOOP - looking at number of events instead of number of datetime rows
   # ALSO DONE IN MINUTE TIME BINS - essentially gives you porpoise positive minutes based on event Click Event start/end times 
 
-# Start loop
+# START OF LOOP 
 for (j in 1:nrow(Buzz_Master)) {
   
   # set temp variables 
@@ -134,6 +138,8 @@ Vessel_Presence_filtered$date_only <- NULL
 ########################################################################################## 
 # CALCULATING RECORDING EFFORT MINUTES - this is based on the code from Recording_Effort but adapted to minute format 
 
+#### Part of this code comes from Recording Effort script - check there if anything does not make sense 
+
 str(Sound_Acq_TOTAL)
 
 Sound_Acq_TOTAL <- Sound_Acq_TOTAL %>%
@@ -144,6 +150,7 @@ Sound_Acq_TOTAL <- Sound_Acq_TOTAL %>%
 Recording_Effort <- Recording_Effort %>%
   mutate(datetime = as.POSIXct(datetime, format="%Y-%m-%d %H:%M:%S", tz="UTC"))
 
+# MAIN CODE FOR BINARY RESPONSE TO RECORDING EFFORT 
 Vessel_Presence$Recording_Effort <- ifelse(Vessel_Presence$datetime %in% Sound_Acq_TOTAL$UTC_minute, 1, 0)
 View(Vessel_Presence)
 
@@ -165,8 +172,8 @@ print(VesselPresenceTOTAL)
 834014 # vessel absence 
 276286 # vessel presence 
 
-834014/1110300 # 75% of the time 
-276286/1110300 # 25% of the time 
+834014/1110300 # absent 75% of the time 
+276286/1110300 # present 25% of the time 
 
 #############################
 ## ADDING TEMPORAL ELEMENT 

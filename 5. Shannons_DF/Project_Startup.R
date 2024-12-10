@@ -40,6 +40,7 @@ library(AER)
 library(car)
 library(pscl)
 library(suncalc)
+library(tidyr)
 
 
 # if you need to remove a package for any reason (updating etc) 
@@ -107,6 +108,21 @@ Jan2021_Feb2021_Buzz$X.Exposure_500m. <- gsub("\"", "", Jan2021_Feb2021_Buzz$X.E
 # print the first 10 rows of a column in the dataframe, can check to see any oddities 
 print(head(Dataframe_name$column_name, 10))
 
+# Renaming Headers in Tables before exporting them 
+Click_Event_Time_of_Day_Table <- Click_Event_Time_of_Day_Table %>% 
+  rename(
+    "Time of Day" = Var1,
+    "Count of Events" = Freq
+  )
+
+### EXPORT AS PNG - need to run individually (not sure if this works for tables)
+png("Annual Recording Heatmap.png", width = 800, height = 600, res = 150) 
+
+grid.table(Click_Event_Time_of_Day_Table, rows = NULL)
+
+dev.off()
+
+
 
 ################################################################################################################# 
 ############ PLOTS ##################
@@ -117,6 +133,7 @@ library(ggplot2)
 ggplot(dataframe, aes(x= X_data, y = Y_data))+
   geom_bar()
 
+# position: stack, dodge, identity (stat = identity?)
 ################################################################################################################# 
 ############## SAVING DATAFRAMES TO RPROJECT #################
 ################################################################################################################# 
