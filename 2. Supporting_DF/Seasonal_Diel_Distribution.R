@@ -1,6 +1,12 @@
 ###################################################################################################################################
 ### SEASONAL AND DIEL PRESENCE AND DISTRIBUTION ### 
 ###################################################################################################################################
+## this script adds in temporal categories to Buzz_Master based on UTC timezone
+  # also adds daylight categories based on package suncalc and re-orders columns 
+
+# has some basic plots for count of number buzz events per category 
+
+
 
 ###################################################################################################################################
 ## ADDING MONTH AND HOUR COLUMNS TO THE MASTER DATASET 
@@ -80,7 +86,7 @@ hist(Buzz_Master$Month)
 ############ BETTER BARPLOTS #############
 library(ggplot2)
 
-## Barplot for Time of Day 
+## Barplot for Time of Day - I think these are events recorded for each - but not taking recording effort into account
 ggplot(Buzz_Master, 
        aes(x = factor(Time_of_day,levels = c("NIGHT", "MORNING", "DAY", "EVENING")), y = , color = Time_of_day)) + 
   geom_bar()+
@@ -181,7 +187,7 @@ Vessel_Presence_bckup <- Vessel_Presence_bckup %>%
     TRUE ~ NA_character_
   ))
 
-# remove the unnecessar columns in Vessel_presece
+# remove the unnecessary columns in Vessel_presence
 Vessel_Presence_bckup$night <- NULL
 
 # move over most recent to vessel presence and remove working copy

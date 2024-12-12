@@ -1,4 +1,4 @@
-## Temporal & diel pattern trends ##  -----
+ ## Temporal & diel pattern trends ##  -----
 
 ################################################
 ## Load packages
