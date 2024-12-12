@@ -27,6 +27,7 @@ dispersion_stat <- residual_deviance / residual_df
 # Overdispersed 
 
 # Negative binomial model
+#BEST MODEL
 modelp2 <- glm(ThirdOctave_894_1118_median ~ present, data = noisedf, family = negative.binomial(theta = 1))
 summary(modelp2)
 
@@ -51,6 +52,7 @@ dispersion_stat <- residual_deviance / residual_df
 # Overdispersed 
 
 # Negative binomial model
+# BEST MODEL
 model2 <- glm(ThirdOctave_894_1118_median ~ Vessel_Count, data = noisedf, family = negative.binomial(theta = 1))
 summary(model2)
 
@@ -78,6 +80,7 @@ dispersion_stat <- residual_deviance / residual_df
 # Negative binomial model
 noisedf3 <- filter(noisedf, noisedf$Average_Speed < 40)
 
+# BEST MODEL
 model4 <- glm(ThirdOctave_894_1118_median ~ Average_Speed, data = noisedf3, family = negative.binomial(theta = 1))
 summary(model4)
 

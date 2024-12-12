@@ -76,6 +76,7 @@ crPlots(model1)
 ################################################
 
 ## Quasibinomial with environmental variables 
+# BEST MODEL
 model2 <- glm(Buzz_Rate ~ Exposure_3k*Daylight + (1|Month), data = buzzdf4, family = quasibinomial)
 summary(model2)
 
@@ -107,8 +108,9 @@ ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = Daylight)) +
 buzzdf5 <- filter(buzzdf4, buzzdf4$Vessel_Overlap != 0)
 
 ## Overlap with vessel time 
-model4 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial)
-summary(model4)
+# BEST MODEL
+model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial)
+summary(model5)
 
 ggplot(buzzdf4, aes(x = Vessel_Overlap, y = Buzz_Rate)) +
   geom_smooth(method = "lm") +
