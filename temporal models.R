@@ -88,6 +88,3 @@ summary(moodelvo)
 
 #####################################################
 
-count <- count(Vessel_Presence_20241203, Recording_Effort, Porpoise_Event)
-weirdo <- filter(Vessel_Presence_20241203, Recording_Effort == 0)
-weirdo <- filter(weirdo, Porpoise_Event == 1)
