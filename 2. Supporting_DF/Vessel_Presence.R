@@ -154,26 +154,6 @@ Recording_Effort <- Recording_Effort %>%
 Vessel_Presence$Recording_Effort <- ifelse(Vessel_Presence$datetime %in% Sound_Acq_TOTAL$UTC_minute, 1, 0)
 View(Vessel_Presence)
 
-################################################################################################3
-## BASIC DESCRIPTIVE STATS ## 
-
-# proportion of X time with vessels present 
-# proportion of that same X time with porpoise presence (PPM)
-
-VesselPresenceTOTAL <- Vessel_Presence %>%
-  group_by(Vessel_3k) %>%
-  summarise(Count = n()) %>%
-  ungroup()
-
-print(VesselPresenceTOTAL)
-
-## modified for filtered dataframe 
-1110300 # total minutes 
-834014 # vessel absence 
-276286 # vessel presence 
-
-834014/1110300 # absent 75% of the time 
-276286/1110300 # present 25% of the time 
 
 #############################
 ## ADDING TEMPORAL ELEMENT 
@@ -195,9 +175,73 @@ Vessel_Presence$Season <- with(Vessel_Presence, ifelse(Month %in% c(12, 1, 2), "
                                                       ifelse(Month %in% c(6, 7, 8), "SUMMER",
                                                              ifelse(Month %in% c(9, 10, 11), "AUTUMN", NA)))))
 
+
+################################################################################################
+
+# Table with PROPORTION, Vessel Presence, ToD, Hour, Season, Month 
+Model_table_PorpoiseProp_VesselPresence_ToD_Hour_Season_Month <- Vessel_Presence %>%
+  group_by(Time_of_day, Hour, Season, Month, Vessel_3k) %>%
+  summarise(
+    Total_Count = n(),
+    Porpoise_Present = sum(Porpoise_Event),
+    .groups = "drop"  # Ensures the result is an ungrouped dataframe
+  ) %>%
+  mutate(
+    Proportion_Porpoise_Event = Porpoise_Present / Total_Count
+  )
+
+  
+################################################################################################
+#### WITH VESSEL PRESENCE ACTING AS MINUTE TIME BIN DATAFRAME 
+  ## Calculate the proportion of time each event spends with vessel present on a minute time bin 
+
+# Summarize the data to calculate the vessel overlap for each Event_ID
+Porpoise_Event_Vessel_Overlap <- Vessel_Presence %>%
+  group_by(Event_ID) %>%
+  summarize(
+    Total_Minutes = n(), # Total minutes for each Event_ID
+    Vessel_Presence_Minutes = sum(Vessel_3k), # Sum of Vessel_3k (vessel presence)
+    .groups = "drop" # Prevents grouped output
+  ) %>%
+  mutate(
+    Vessel_Overlap = (Vessel_Presence_Minutes / Total_Minutes) * 100, # Percentage overlap
+    Vessel_Any = ifelse(Vessel_Presence_Minutes > 0, 1, 0) # Binary indicator for any vessel presence
+  )
+View(Porpoise_Event_Vessel_Overlap)
+remove(Porpoise_Event_Vessel_Overlap)
+
+# now join to Buzz_Master
+Buzz_Master <- Buzz_Master %>%
+  left_join(
+    Porpoise_Event_Vessel_Overlap %>%
+      select(Event_ID, Total_Minutes, Vessel_Presence_Minutes, Vessel_Overlap), 
+    by = "Event_ID"
+  )
+
+################################################################################################3
+## BASIC DESCRIPTIVE STATS ## 
+
+# proportion of X time with vessels present 
+# proportion of that same X time with porpoise presence (PPM)
+
+VesselPresenceTOTAL <- Vessel_Presence %>%
+  group_by(Vessel_3k) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+print(VesselPresenceTOTAL)
+
+## modified for filtered dataframe 
+1110300 # total minutes 
+834014 # vessel absence 
+276286 # vessel presence 
+
+834014/1110300 # absent 75% of the time 
+276286/1110300 # present 25% of the time 
+
 ################################################################################################
 ## PLOTTING VESSEL PRESENCE/ABSENCE BASED ON TEMPORAL CATEGORIES 
-  ## these plots look good but the legend scale is weird
+## these plots look good but the legend scale is weird
 
 ## ToD Table 
 Vessel_Presence_plot_variable_ToD <- Vessel_Presence %>%
@@ -237,49 +281,6 @@ ggplot(Vessel_Presence_plot_variable_Season , aes(x = Season, y = Count, fill = 
 # Day: 180647 (65%), 96913 (34%)
 # Evening: 232680 (83%) , 44880 (16%) 
 # Night: 244140 (88%), 33480 (12%)
-
-################################################################################################
-
-# Table with PROPORTION, Vessel Presence, ToD, Hour, Season, Month 
-Model_table_PorpoiseProp_VesselPresence_ToD_Hour_Season_Month <- Vessel_Presence %>%
-  group_by(Time_of_day, Hour, Season, Month, Vessel_3k) %>%
-  summarise(
-    Total_Count = n(),
-    Porpoise_Present = sum(Porpoise_Event),
-    .groups = "drop"  # Ensures the result is an ungrouped dataframe
-  ) %>%
-  mutate(
-    Proportion_Porpoise_Event = Porpoise_Present / Total_Count
-  )
-
-  
-################################################################################################
-#### WITH VESSEL PRESENCE ACTING AS MINUTE TIME BIN DATAFRAME 
-  ## Calculate the proportion of time each event spends with vessel present on a minute time bin 
-
-# Summarize the data to calculate the vessel overlap for each Event_ID
-Porpoise_Event_Vessel_Overlap <- Vessel_Presence %>%
-  group_by(Event_ID) %>%
-  summarize(
-    Total_Minutes = n(), # Total minutes for each Event_ID
-    Vessel_Presence_Minutes = sum(Vessel_3k), # Sum of Vessel_3k (vessel presence)
-    .groups = "drop" # Prevents grouped output
-  ) %>%
-  mutate(
-    Vessel_Overlap = (Vessel_Presence_Minutes / Total_Minutes) * 100, # Percentage overlap
-    Vessel_Any = ifelse(Vessel_Presence_Minutes > 0, 1, 0) # Binary indicator for any vessel presence
-  )
-View(Porpoise_Event_Vessel_Overlap)
-
-# now join to Buzz_Master
-Buzz_Master <- Buzz_Master %>%
-  left_join(
-    Porpoise_Event_Vessel_Overlap %>%
-      select(Event_ID, Total_Minutes, Vessel_Presence_Minutes, Vessel_Overlap), 
-    by = "Event_ID"
-  )
-
-
 
 
 

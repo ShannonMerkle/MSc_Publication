@@ -283,4 +283,60 @@ ggplot(test_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = Vessel_3k
   theme(axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
+time_colors2<- c(
+  "Day_0" = "lightorange",  # Day, Vessel Absence
+  "Day_1" = "darkorange",   # Day, Vessel Presence
+  "Night_0" = "lightblue",  # Night, Vessel Absence
+  "Night_1" = "steelblue"   # Night, Vessel Presence
+)
+
+# Updated plot
+ggplot(plot1_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = interaction(Daylight, Vessel_3k))) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.6) +
+  scale_fill_manual(
+    values = time_colors2,
+    labels = c(
+      "Day_0" = "Day (No Vessel)",
+      "Day_1" = "Day (Vessel)",
+      "Night_0" = "Night (No Vessel)",
+      "Night_1" = "Night (Vessel)"
+    )
+  ) +
+  labs(
+    x = "Daylight by Month",
+    y = "Percentage of Porpoise Positive Minutes",
+    title = "Percentage of Porpoise Positive Minutes by Month and Daylight",
+    fill = "Daylight and Vessel Presence"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Define unique colors for combinations of Daylight and Vessel Presence
+time_colors <- c(
+  "Day.0" =  "darkseagreen2",  # Day, Vessel Absence
+  "Day.1" = "darkseagreen4",   # Day, Vessel Presence
+  "Night.0" = "slategray2",  # Night, Vessel Absence
+  "Night.1" = "slategrey"   # Night, Vessel Presence
+)
+
+# Updated plot - BEST COLOR OPTIONS 
+ggplot(plot1_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = interaction(Daylight, Vessel_3k))) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.6) +
+  scale_fill_manual(
+    values = time_colors,
+    labels = c(
+      "Day.0" = "Day (No Vessel)",
+      "Day.1" = "Day (Vessel)",
+      "Night.0" = "Night (No Vessel)",
+      "Night.1" = "Night (Vessel)"
+    )
+  ) +
+  labs(
+    x = "Daylight by Month",
+    y = "Percentage of Porpoise Positive Minutes",
+    title = "Percentage of Porpoise Positive Minutes with and without Vessel by Month and Daylight",
+    fill = "Daylight and Vessel Presence"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 

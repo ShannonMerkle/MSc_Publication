@@ -1,7 +1,7 @@
 ###################################################################################################################################
 ### SEASONAL AND DIEL PRESENCE AND DISTRIBUTION ### 
 ###################################################################################################################################
-## this script adds in stemporal categories to Buzz_Master based on UTC timezone
+## this script adds in temporal categories to Buzz_Master based on UTC timezone
   # also adds daylight categories based on package suncalc and re-orders columns 
 
 # has some basic plots for count of number buzz events per category 

@@ -6,7 +6,7 @@
 # FINAL RECORDING EFFORT HEATMAP 
 
 # heatmap plot for recording DAYS - should we do hours or minutes on a more fluid scale?
-Recording_Effort_Heatmap_Plot <- ggplot(Total_Recording_Effort, aes(x = Day, y = Month, fill = Total_Recording_Day)) +
+Recording_Effort_Heatmap_Plot <- ggplot(Summary_Recording_Effort, aes(x = Day, y = Month, fill = Total_Recording_Day)) +
   geom_tile(color = "black") +
   scale_fill_stepsn(colors = c("gray95", "gray80", "gray60", "gray40", "gray25"),
                     breaks = c(1, 2, 3, 4),
@@ -26,7 +26,7 @@ Recording_Effort_Heatmap_Plot
 # FINAL Percentage of Porpoise Positive Minutes with and without vessels by Daylight 
 
 # make a new dataframe for data grouped in a specific way - needed a Vessel_3k column 
-test_df <- Vessel_Presence %>% 
+plot1_df <- Vessel_Presence %>% 
   group_by(Daylight, Month, Vessel_3k) %>%
   summarise(
     Total_Count = n(), 
@@ -42,34 +42,43 @@ test_df <- Vessel_Presence %>%
   )
 
 # round the percentrage to only 2 decimal spaces
-test_df$Percentage_PPM <- round(test_df$Percentage_PPM, 2)
+plot1_df$Percentage_PPM <- round(test_df$Percentage_PPM, 2)
 
 # create the interction column 
-test_df$Time_Month <- interaction(test_df$Daylight, test_df$Month, sep = " - ")
+plot1_df$Time_Month <- interaction(test_df$Daylight, test_df$Month, sep = " - ")
 
 ## needed to set Vessel_3k as a factor instead of a number 
-test_df$Vessel_3k <- as.factor(test_df$Vessel_3k)
+plot1_df$Vessel_3k <- as.factor(test_df$Vessel_3k)
 
 # NOW ADJUST THE COLOR OF BARS - and legend 
-time_colors <- c("Day" = "darkorange", "Night" = "steelblue")
+time_colors <- c(
+  "Day.0" =  "darkseagreen2",  # Day, Vessel Absence
+  "Day.1" = "darkseagreen4",   # Day, Vessel Presence
+  "Night.0" = "slategray2",  # Night, Vessel Absence
+  "Night.1" = "slategrey"   # Night, Vessel Presence
+)
 
 # NEW PLOT - change position between dodge and stack, I think dodge is actually easier to read 
-ggplot(test_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = Vessel_3k)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.6, aes(color = Daylight)) +
-  scale_fill_manual(values = c("1" = "lightgray",  "0" = "darkgray")) + # Fill for Vessel_Presence
-  scale_color_manual(values = time_colors) + # Outline color for Time_of_Day
+
+ggplot(plot1_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = interaction(Daylight, Vessel_3k))) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.6) +
+  scale_fill_manual(
+    values = time_colors,
+    labels = c(
+      "Day.0" = "Day (No Vessel)",
+      "Day.1" = "Day (Vessel)",
+      "Night.0" = "Night (No Vessel)",
+      "Night.1" = "Night (Vessel)"
+    )
+  ) +
   labs(
     x = "Daylight by Month",
     y = "Percentage of Porpoise Positive Minutes",
     title = "Percentage of Porpoise Positive Minutes by Month and Daylight",
-    fill = "Vessel Presence",
-    color = "Time of Day"
+    fill = "Daylight and Vessel Presence"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 

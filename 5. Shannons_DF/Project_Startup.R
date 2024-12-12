@@ -74,7 +74,7 @@ Buzz_Noise_Monitor_Oct2018 <- Buzz_Noise_Monitor_Oct2018 %>%
 ## its a good idea to make a backup dataframe just in case this removes something important by accident 
 
 # BULK IDENTIFY OBJECTS IN ENVIRONMENT BASED ON NAMING PATTERN 
-ls(pattern = "^Model_table_EvCounts")
+ls(pattern = "^Model_table")
 
 # BULK REMOVE OBJECTS IN ENVIRONMENT BASED ON NAMING PATTERN - check the above first and make sure you want to remove!
 rm(list = ls(pattern = "^Model_table"))

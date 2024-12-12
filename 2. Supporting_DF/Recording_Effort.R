@@ -8,8 +8,9 @@
 # DATAFRAMES
 Sound_Acq_TOTAL
 Recording_Effort # hourly recording effort across all years
-Total_Recording_Effort # summary of recording hours of all years together 
+Total_Recording_Effort # summary of recording hours of all years together NOW Summary_Recording_Effort
 Vessel_Presence # has recording effort on minute time bin 
+Summary_Recording_Effort # SAME AS Total_Recording_Effort BUT WITH A NAME THAT MAKES MORE SENSE 
 
 ## dataframes and tables have been cleaned significantly - all this code should work 
 ################################################################################################################# 
@@ -86,6 +87,9 @@ Recording_Effort <- Recording_Effort %>%
 
 ################################################################################################################# 
 ## CREATING DATAFRAME WITH ALL YEARS TOGETHER TO CALC RECORDING HOURS AND DAYS ###
+
+#### NOW Summary_Recording_Effort
+
 library(dplyr)
 
 Total_Recording_Effort <- Recording_Effort %>%
@@ -142,6 +146,8 @@ Recording_Effort$Time_of_day <-with(Recording_Effort, ifelse(Hour %in% c(12,13, 
 
 ################################################################################################################# 
 ############ FINAL HEATMAP PLOT ##################### 
+
+## USE VERSION IN SCRIPT FINAL_Visualisations - and use df Summary_Recording_Effort 
 
 library(ggplot2)
 library(gridExtra)
