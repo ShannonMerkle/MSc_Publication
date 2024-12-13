@@ -127,4 +127,21 @@ ggplot(data = event_59_bands, aes(x = UTC, y = Noise_Level, color = Frequency_Ba
 
 ###################################################################################################################################
 
+## Creating single median column for all bands <2000Hz
+
+# Assuming your dataframe is called `df` and the relevant columns are A, B, and C
+
+
+Buzz_Noise_Monitor_Oct2018$Median_2000Hz <- apply(Buzz_Noise_Monitor_Oct2018[, c("ThirdOctave_447_561_median", 
+                                                                                 "ThirdOctave_561_709_median",
+                                                                                 "ThirdOctave_709_894_median",
+                                                                                 "ThirdOctave_894_1118_median",
+                                                                                 "ThirdOctave_1118_1414_median",
+                                                                                 "ThirdOctave_1414_1788_median",
+                                                                                 "ThirdOctave_1788_2236_median")], 
+                                                  1, median, na.rm = TRUE)
+
+
+
+
 

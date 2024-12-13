@@ -41,6 +41,7 @@ library(car)
 library(pscl)
 library(suncalc)
 library(tidyr)
+library(reshape2)
 
 
 # if you need to remove a package for any reason (updating etc) 

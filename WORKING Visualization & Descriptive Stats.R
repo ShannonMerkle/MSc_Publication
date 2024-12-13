@@ -340,3 +340,99 @@ ggplot(plot1_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = interact
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+##########################################################################
+
+ggplot(Buzz_Master, aes(x = factor(Exposure_3k, labels = c("Absence", "Presence")), y = Buzz_Rate)) +
+  geom_boxplot(outlier.color = "red", fill = "lightblue", alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.4, color = "darkblue") + # Optional jitter for individual data points
+  labs(
+    x = "Vessel Presence",
+    y = "Buzz Rate",
+    title = "Buzz Rate by Vessel Presence"
+  ) +
+  theme_minimal()
+
+# stacked histogram 
+ggplot(Buzz_Master, aes(x = Buzz_Rate, fill = factor(Exposure_3k, labels = c("Absence", "Presence")))) +
+  geom_histogram(position = "identity", alpha = 0.6, bins = 30) +
+  scale_fill_manual(values = c("skyblue", "orange")) +
+  labs(
+    x = "Buzz Rate",
+    y = "Count",
+    fill = "Vessel Presence",
+    title = "Histogram of Buzz Rate by Vessel Presence"
+  ) +
+  theme_minimal()
+## have more non-buzz events when vessels are absent 
+# when vessels are present 
+
+# Filter out rows with Buzz_Rate equal to 0.0
+Buzz_Master_nonzero <- Buzz_Master %>% filter(Buzz_Rate > 0)
+
+# Create the histogram
+ggplot(Buzz_Master_nonzero, aes(x = Buzz_Rate, fill = factor(Exposure_3k, labels = c("Absence", "Presence")))) +
+  geom_histogram(position = "identity", alpha = 0.6, bins = 30) +
+  scale_fill_manual(values = c("skyblue", "orange")) +
+  labs(
+    x = "Buzz Rate",
+    y = "Count",
+    fill = "Vessel Presence",
+    title = "Histogram of Non-Zero Buzz Rates by Vessel Presence"
+  ) +
+  theme_minimal()
+
+## PLOTTING HISTOGRAM WITH DIURNAL FACTORS 
+# Ensure Daylight is a factor (if not already)
+Buzz_Master_nonzero$Daylight <- factor(Buzz_Master_nonzero$Daylight, levels = c("Day", "Night"))
+
+# Create the faceted histogram
+ggplot(Buzz_Master_nonzero, aes(x = Buzz_Rate, fill = factor(Exposure_3k, labels = c("Absence", "Presence")))) +
+  geom_histogram(position = "identity", alpha = 0.6, bins = 30) +
+  scale_fill_manual(values = c("skyblue", "orange")) +
+  facet_wrap(~ Daylight) +  # Facet by Daylight
+  labs(
+    x = "Buzz Rate",
+    y = "Count",
+    fill = "Vessel Presence",
+    title = "Histogram of Non-Zero Buzz Rates by Vessel Presence and Daylight"
+  ) +
+  theme_minimal()
+
+############################################################################
+# VESSEL OVERLAP 
+
+# Scatter plot of Vessel_Overlap vs Buzz_Rate
+ggplot(Buzz_Master, aes(x = Vessel_Overlap, y = Buzz_Rate)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "dashed") + # Optional linear fit
+  labs(
+    x = "Vessel Overlap (Proportion)",
+    y = "Buzz Rate",
+    title = "Scatter Plot of Buzz Rate vs Vessel Overlap"
+  ) +
+  theme_minimal()
+
+# WITH DAYLIGHT
+ggplot(Buzz_Master, aes(x = Vessel_Overlap, y = Buzz_Rate, color = Daylight)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    x = "Vessel Overlap (Proportion)",
+    y = "Buzz Rate",
+    color = "Daylight",
+    title = "Scatter Plot of Buzz Rate vs Vessel Overlap by Daylight"
+  ) +
+  theme_minimal()
+
+ggplot(Buzz_Master, aes(x = Vessel_Overlap, y = Buzz_Rate)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red", linetype = "dashed") +
+  facet_wrap(~ Daylight) +
+  labs(
+    x = "Vessel Overlap (Proportion)",
+    y = "Buzz Rate",
+    title = "Scatter Plot of Buzz Rate vs Vessel Overlap by Daylight"
+  ) +
+  theme_minimal()
+
+hist(Buzz_Master$Total_Minutes)

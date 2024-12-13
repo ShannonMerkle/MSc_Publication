@@ -1,4 +1,31 @@
  ## Temporal & diel pattern trends ##  -----
+ 
+ ## FINAL MODELS 
+ 
+# TEMPORAL 
+  # QUESTION: 
+    ## When are porpoises most active in a day - does that vary by season? and 
+    ## when are porpoises most active within a year and does that vary between years?
+ model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
+ summary(model3)
+ 
+ # VESSEL PRESENCE 
+ ## GLM of season and year with a random effect of year 
+ modelv1 <- glm(Vessel_3k ~ factor(Month)*Daylight + (1|Year), data = daydf2,
+                family = binomial(link = "logit"),
+                weights = Recording_Effort)
+ summary(modelv1)
+ 
+ ## Vessel are present less in the night than the day, this is true across season and year. 
+ ## They are most present from July - September. 
+ 
+# VESSEL OVERLAP
+ ## GLM of season and year with a random effect of year 
+ moodelvo <- glm(Overlap ~ factor(Month)*Daylight + (1|Year), data = daydf3, 
+                 family = binomial(link="logit"), 
+                 weights = Recording_Effort)
+ 
+ summary(moodelvo)
 
 ################################################
 ## Load packages
@@ -34,7 +61,7 @@ summary(model1)
 model2 <- glm(Proportion_Porpoise_Event ~ factor(Month),data = daydf)
 summary(model2) 
 
-## Does daylight activity change by season?
+## Does daylight activity change by season? BEST 
 model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
 summary(model3)
 

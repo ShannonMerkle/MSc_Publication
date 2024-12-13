@@ -4,7 +4,7 @@
 
 ## load all necessary packages 
 
-## stat note: using YEAR, Month, and Daylight (with year) to give repitition to the model 
+## stat note: using YEAR, Month, and Daylight (with year) to give repetition to the model 
   # aka Night of month 12 has happened multiple times across years, as opposed to without year it has only happened once
   # more repitition equals better statistical power which will help the model! 
 
@@ -93,6 +93,63 @@ ggplot(stacked_data, aes(x = Month, y = Count, fill = Type)) +
        x = "Month",
        y = "Count") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+################################################
+
+## VESSEL IMPACT MODELS 
+
+# Data are not really a true proportion because we still have a binary 1 and 0, with anything greater than 0 being a proportion
+  # a better way to do this is run a binomial with a cbind of success vs total/success (proportion aspect) 
+    ## the model knows what to do with this more than a true proportion or simple binomial 
+  
+  # Zero inflated is more for when you are lacking data and did not expect the number of 0 you have
+    # in our case we have a lot of data and remotely expected the number of 0 we have (but NOT normally distributed)
+  # THEREFORE instead of running a zero inflated model we can run a quasi-binomial which accounts for NON-NORMAL DIST) 
+    # (and the reg binomial very overdispersed anyway) quasibinomial is best then 
+
+# CHECKS
+  # look at a histogram hist() of the data
+  # run model - check for overdispersion
+  # check Q-Q plots 
+  # check residuals 
+
+############# FOR EVENTS 60 MINUTES OR SHORTER (eliminates 1800 events of 10,900 total) - different for non 0 buzzrate 
+
+## Buzz Rate * Daylight + month as random effect
+  # buzzing more at night 
+
+## Buzz rate and daylight (no random effect or interaction)
+  # buzz more during the day 
+
+## Buzz rate ~ Exposure_3k*Daylight + Month random effect - BEST MODEL 
+  # overall vessel present = buzz LESS
+  # During the night when vessels are present = buzz less than when vessels are present
+  # when a vessel is not present they buzz LESS at night than day, when a vessel IS present buzz more at night than day
+    # but still less overall than when a vessel is not present 
+
+## Buzz_Rate ~ Vessel_Overlap*Daylight + Month as random effect (ONLY WHEN VESSELS ARE PRESENT)
+  # overall as overlap increases, buzz rate decreases (not significant)
+  # trend holds during day
+  # at night buzz rate increases as vessel overlap increases 
+
+## Buzz_Rate ~ Vessel_Overlap*Daylight + Month random effect (WITH 0 INCLUDED)
+  # vessel overlap is significant 
+  # as vessel overlap increases, buzz rate decreases 
+  # looking at a gradient of vessel overlap, when a vessel is there for more time in the event = more vessel time, less buzz time 
+
+# mention looking at duration and having little effect compared to buzz rate 
+
+###### FINALS FOR VESSEL IMPACT 
+
+# model2
+# model5
+
+##### BASIC NOISE MODELS
+
+# modelp2
+# model2
+# model4 
 
 
 

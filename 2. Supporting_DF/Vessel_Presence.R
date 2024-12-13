@@ -282,6 +282,10 @@ ggplot(Vessel_Presence_plot_variable_Season , aes(x = Season, y = Count, fill = 
 # Evening: 232680 (83%) , 44880 (16%) 
 # Night: 244140 (88%), 33480 (12%)
 
+################################################################################################################################3
+
+## need to remove the rows in Vessel Presence which have 0 recording effort but still have a detection 
+
 
 
 

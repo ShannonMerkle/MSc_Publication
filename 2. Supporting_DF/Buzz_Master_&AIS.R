@@ -754,8 +754,23 @@ View(Buzz_Oct2018_subset)
   
 ## MAKING A VESSEL TYPE COLUMN 
 
-vessel_hierarchy <- c("CARGO", "TANKER", "MILITARY", "TUG", "PILOT", "FISHING", "PASSENGER", "PLEASURE", "OTHER", "UNKNOWN")
+vessel_hierarchy <- c("CARGO", "TANKER", "MILITARY", "TUG", "FISHING", "PILOT", "PASSENGER", "PLEASURE", "OTHER", "UNKNOWN", NA)
 
+## what are all the unique variables? 
+unique_values <- unique(Buzz_Master$mmsiNumber_Type_1)
+print(unique_values)
+
+get_highest_ranked_type <- function(row, hierarchy) {
+  for (type in hierarchy) {
+    if (type %in% row) {
+      return(type)
+    }
+  }
+  return(NA)  # If no match is found
+}
+
+Buzz_Master$Vessel_Type <- apply(Buzz_Master[, paste0("mmsiNumber_Type_", 1:9)], 1, 
+                                 get_highest_ranked_type, hierarchy = vessel_hierarchy)
 
 
 
