@@ -61,7 +61,12 @@ summary(model1)
 model2 <- glm(Proportion_Porpoise_Event ~ factor(Month),data = daydf)
 summary(model2) 
 
+<<<<<<< HEAD
 ## Does daylight activity change by season? BEST 
+=======
+## Does daylight activity change by season?
+# BEST MODEL
+>>>>>>> 4729259c53b4d9f4a1cf68e72ad12f8a464a4a1a
 model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
 summary(model3)
 
@@ -85,6 +90,7 @@ summary(model4)
 ## Vessel temporal trends ####################################
 
 ## GLM of season and year with a random effect of year 
+# BEST MODEL
 modelv1 <- glm(Vessel_3k ~ factor(Month)*Daylight + (1|Year), data = daydf2,
               family = binomial(link = "logit"),
               weights = Recording_Effort)
@@ -107,6 +113,7 @@ daydf3$Overlap <- as.factor(daydf3$Overlap)
 daydf3$Year <- as.numeric(daydf3$Year)
 
 ## GLM of season and year with a random effect of year 
+# BEST MODEL 
 moodelvo <- glm(Overlap ~ factor(Month)*Daylight + (1|Year), data = daydf3, 
                 family = binomial(link="logit"), 
                 weights = Recording_Effort)
