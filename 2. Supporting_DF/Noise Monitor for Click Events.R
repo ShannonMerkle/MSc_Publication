@@ -99,27 +99,28 @@ library(ggplot2)
 library(tidyr)
 
 # TIME BASED PLOT FOR SINGLE OCTAVE BAND 
-ggplot(data = event_59, aes(x = UTC, y = ThirdOctave_561_709_mean)) +
+ggplot(data = event_59, aes(x = UTC, y = Median_2000Hz)) +
   geom_line() +   # Creates a line plot
-  labs(title = "Noise Progression Over Time for Event 59",
+  labs(title = "Noise Over Time for Event 59",
        x = "Time (UTC)",
-       y = "Noise Level (ThirdOctave_561_709_mean)") +
+       y = "Median of 2000Hz bands") +
   theme_minimal() # Optional: apply a clean theme
 
 ############# NOW MAKING PLOT WITH MULTIPLE OCTAVE BANDS IN IT 
 
 # Reshape the data into long format
 event_59_bands <- event_59 %>%
-  pivot_longer(cols = c(ThirdOctave_447_561_mean, 
-                        ThirdOctave_894_1118_mean, 
-                        ThirdOctave_2806_3549_mean),
+  pivot_longer(cols = c(ThirdOctave_447_561_median, 
+                        ThirdOctave_894_1118_median, 
+                        ThirdOctave_2806_3549_median, 
+                        Median_2000Hz),
                names_to = "Frequency_Band",
                values_to = "Noise_Level")
 
 # Now time to plot 
 ggplot(data = event_59_bands, aes(x = UTC, y = Noise_Level, color = Frequency_Band)) +
   geom_line() +
-  labs(title = "Noise Progression Over Time for Different Frequency Bands",
+  labs(title = "Noise Across Single Click Event",
        x = "Time (UTC)",
        y = "Noise Level",
        color = "Frequency Band") +
