@@ -6,7 +6,7 @@
 
 ## stat note: using YEAR, Month, and Daylight (with year) to give repetition to the model 
   # aka Night of month 12 has happened multiple times across years, as opposed to without year it has only happened once
-  # more repitition equals better statistical power which will help the model! 
+  # more repetition equals better statistical power which will help the model! 
 
 ## adding an interaction term to a model that does not have a large degree of freedom can negatively impact the model without 
   # helping it explain variation 
@@ -19,6 +19,20 @@
 ## WEIGHTING - using the PPM as a proportion greatly reduced our sample size by grouping too much together and LOST US STATISTICAL POWER
   # in our case using a more raw form of our event data with a weight variable gives us much more data and much more statistical power = BETTER 
 
+## THE ESTIMATE IS A SLOPE OF CHANGE 
+## for binomial (and quasibinomial) models the estimates are in log odds -> need to convert exp(log-odd)
+
+## INTERPRETING INTERACTIONS:if there is an interaction, the intercept will be the opposite of the interaction term 
+  # For an example use Final Model called ModelBuzz_VesselOverlap_Temporal
+  # the intercept is -1.7367, meaning daytime and with NO vessel overlap
+  # the estimate for Vessel_Overlap is -0.0053 meaning that for each unit increase in vessel overlap, 
+    # the buzz rate decreases by 0.0053 (log odds)
+  # the estimate for night is -0.1856 meaning that buzz rate is lower at night when vessel overlap is 0
+  # the positive interaction term of 0.00547 adjusts the slope of vessel overlap effect at night (meaning it )
+    # meaning that the effect is less negative (weaker) at night 
+    ## HOW THIS WORKS OUT IS: Day + overlap is the intercept + the estimate for Vessel_Overlap 
+      # to interpret the intercept YOU ADD THE INTERACTION VALUE TO THE ORIGINAL ESTIMATE **
+      # **** this means that you add the vessel_overlap:night interaction to the vessel_overlap estimate (NOT THE INTERCEPT)
 
 ##############################################################################################
 ########### TEMPORAL MODELS ###################################################
@@ -151,7 +165,90 @@ ggplot(stacked_data, aes(x = Month, y = Count, fill = Type)) +
 # model2
 # model4 
 
+#######################################################################################################################
+################################## FINAL MODELS ##################################
 
+model3 # Temporal Model 1 (?? NOT SURE IF THIS IS RIGHT)
+model4 # Temporal Model 2 (weighted glm)
+modelv1 # Vessel Presence + Temporal
+moodlevo # Vessel Overlap Events + Temporal 
+model2 # Buzz Rate + Vessel Impacts + Temporal 
+model5 # Buzz Rate
+
+
+
+## TEMPORAL VARIABLES 
+
+# QUESTIONS:  
+# 1. When are porpoises most active in a day - does that vary by season? and 
+# 2. When are porpoises most active within a year and does that vary between years?
+
+# Data: temporal_df (daydf) -- now called 
+#     Vessel_Presence (daydf2) -- now called 
+
+model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
+summary(model3)
+
+## Model Summary: I DON'T THINK THIS WAS ACTUALLY THE BEST ONE - nothing significant and no weights 
+
+## GLM of season and year with a random effect of year 
+model4 <- glm(Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf2,
+              family = binomial(link = "logit"),
+              weights = Recording_Effort)
+summary(model4)
+plot(model4)
+# MODEL SUMMARY: 
+## They vocalise more at night (stderror = 0.02, z = 46.82, p < 0.001), this is 
+## consistent across seasons and throughout years. They vocalise the most between 
+## spring - autumn, but less so in the winter. 
+## IS THIS ACTUALLY THE BEST ONE?? 
+
+## TEMPORAL + VESSEL PRESENCE 
+
+## GLM of season and year with a random effect of year 
+# BEST MODEL
+modelv1 <- glm(Vessel_3k ~ factor(Month)*Daylight + (1|Year), data = daydf2,
+               family = binomial(link = "logit"),
+               weights = Recording_Effort)
+summary(modelv1)
+
+## Vessel are present less in the night than the day, this is true across season and year. 
+## They are most present from July - September. 
+
+## TEMPORAL + VESSEL OVERLAP 
+
+## GLM of season and year with a random effect of year 
+# BEST MODEL 
+moodelvo <- glm(Overlap ~ factor(Month)*Daylight + (1|Year), data = daydf3, 
+                family = binomial(link="logit"), 
+                weights = Recording_Effort)
+
+summary(moodelvo)
+
+##############################################################################################################
+
+## VESSEL IMPACTS + TEMPORAL VARIABLES 
+
+## Quasibinomial with environmental variables 
+# BEST MODEL
+model2 <- glm(Buzz_Rate ~ Exposure_3k*Daylight + (1|Month), data = buzzdf4, family = quasibinomial)
+summary(model2)
+
+# Diagnostics
+plot(model2)
+
+################################################
+## Vessel overlap instead of exposure binomial 
+buzzdf5 <- filter(buzzdf4, buzzdf4$Vessel_Overlap != 0)
+
+## Overlap with vessel time 
+# BEST MODEL
+model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial)
+summary(model5)
+
+ggplot(buzzdf4, aes(x = Vessel_Overlap, y = Buzz_Rate)) +
+  geom_smooth(method = "lm") +
+  labs(x = "Vessel Overlap", y = "Proportional Buzz Rate")
 
 
 

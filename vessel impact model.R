@@ -13,7 +13,7 @@ library(DHARMa)
 library(car)
 
 ## Clean vessel presence of 0/1 effort 
-vp <- Vessel_Presence_20241203
+vp <- Vessel_Presence
 
 vp2 <- filter(vp, vp$Recording_Effort == 0)
 vp2 <- filter(vp2, vp2$Porpoise_Event == 1)
@@ -25,7 +25,7 @@ Vessel_Presence_20241212 <- anti_join(vp, vp2, by = "Event_ID")
 saveRDS(Vessel_Presence_20241212, "Vessel_Presence_20241212.rds")
 
 # Clear buzz_df
-bdf <- Buzz_Master_20241204
+bdf <- Buzz_Master
 
 Buzz_Master_20241212 <- anti_join(bdf, vp2, by = "Event_ID")
 saveRDS(Buzz_Master_20241212, "Buzz_Master_20241212.rds")
@@ -43,7 +43,7 @@ buzzdf$Exposure_3k <- as.factor(buzzdf$Exposure_3k)
 ## Model vessel impacts
 buzzdf2 <- filter(buzzdf, buzzdf$Buzz_Rate != 0.0)
 buzzdf3 <- filter(buzzdf2, buzzdf2$Buzz_Clicks > 5)
-hist(buzzdf2$Buzz_Rate)buzzdf2$Buzz_Clicks
+hist(buzzdf2$Buzz_Rate) # need to remove longer events 
 
 ## 1hr long events 
 buzzdf4 <- filter(buzzdf3, buzzdf3$Total_Minutes <61)
@@ -109,9 +109,12 @@ buzzdf5 <- filter(buzzdf4, buzzdf4$Vessel_Overlap != 0)
 
 ## Overlap with vessel time 
 # BEST MODEL
-model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial)
+model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial) 
 summary(model5)
 
 ggplot(buzzdf4, aes(x = Vessel_Overlap, y = Buzz_Rate)) +
   geom_smooth(method = "lm") +
   labs(x = "Vessel Overlap", y = "Proportional Buzz Rate")
+
+
+

@@ -41,14 +41,14 @@ plot1_df <- Vessel_Presence %>%
     #Proportion_Porpoise_Event_Vessel = Porpoise_Positive_Minutes_Vessel / Total_Count*100
   )
 
-# round the percentrage to only 2 decimal spaces
-plot1_df$Percentage_PPM <- round(test_df$Percentage_PPM, 2)
+# round the percentage to only 2 decimal spaces
+plot1_df$Percentage_PPM <- round(plot1_df$Percentage_PPM, 2)
 
-# create the interction column 
-plot1_df$Time_Month <- interaction(test_df$Daylight, test_df$Month, sep = " - ")
+# create the interaction column 
+plot1_df$Time_Month <- interaction(plot1_df$Daylight, plot1_df$Month, sep = " - ")
 
 ## needed to set Vessel_3k as a factor instead of a number 
-plot1_df$Vessel_3k <- as.factor(test_df$Vessel_3k)
+plot1_df$Vessel_3k <- as.factor(plot1_df$Vessel_3k)
 
 # NOW ADJUST THE COLOR OF BARS - and legend 
 time_colors <- c(
@@ -60,7 +60,8 @@ time_colors <- c(
 
 # NEW PLOT - change position between dodge and stack, I think dodge is actually easier to read 
 
-ggplot(plot1_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = interaction(Daylight, Vessel_3k))) +
+PLOT_PPM_VesselPresence_Temporal <- ggplot(plot1_df, aes(x = factor(Time_Month), 
+                                                         y = Percentage_PPM, fill = interaction(Daylight, Vessel_3k))) +
   geom_bar(stat = "identity", position = "dodge", width = 0.6) +
   scale_fill_manual(
     values = time_colors,
@@ -79,6 +80,5 @@ ggplot(plot1_df, aes(x = factor(Time_Month), y = Percentage_PPM, fill = interact
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 
 

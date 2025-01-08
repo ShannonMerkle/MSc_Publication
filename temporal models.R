@@ -1,30 +1,8 @@
  ## Temporal & diel pattern trends ##  -----
  
  ## FINAL MODELS 
- 
-# TEMPORAL 
-  # QUESTION: 
-    ## When are porpoises most active in a day - does that vary by season? and 
-    ## when are porpoises most active within a year and does that vary between years?
- model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
- summary(model3)
- 
- # VESSEL PRESENCE 
- ## GLM of season and year with a random effect of year 
- modelv1 <- glm(Vessel_3k ~ factor(Month)*Daylight + (1|Year), data = daydf2,
-                family = binomial(link = "logit"),
-                weights = Recording_Effort)
+ summary(model3) # note sure if this one is right 
  summary(modelv1)
- 
- ## Vessel are present less in the night than the day, this is true across season and year. 
- ## They are most present from July - September. 
- 
-# VESSEL OVERLAP
- ## GLM of season and year with a random effect of year 
- moodelvo <- glm(Overlap ~ factor(Month)*Daylight + (1|Year), data = daydf3, 
-                 family = binomial(link="logit"), 
-                 weights = Recording_Effort)
- 
  summary(moodelvo)
 
 ################################################
@@ -35,16 +13,24 @@ library(ggplot2)
 library(tidyverse)
 library(lme4)
 
-## Load df 
+## Load df - load in the correctly named versions from Data .rds folder 
 daydf <- temporal_df
 daydf2 <- Vessel_Presence_20241203
 
+
+## Create an overlap column - daydf2 (Vessel_Presence)
+daydf2 <- Vessel_Presence_20241203
+daydf2$Vessel_3k <- as.numeric(daydf2$Vessel_3k)
+#daydf2$Overlap <- ifelse(daydf2$Porpoise_Event > 0 & daydf2$Vessel_3k > 0, 1, 0) this one did not work correctly 
+daydf2$Overlap <- ifelse(daydf2$Porpoise_Event == 1 & daydf2$Vessel_3k == 1, 1, 0) # run this instead 
+
 ## Clean variable type 
+daydf$Year <- as.numeric(daydf$Year)
 daydf2$Daylight <- as.factor(daydf2$Daylight)
 daydf2$Month <- as.numeric(daydf2$Month)
 daydf2$Year <- as.numeric(daydf2$Year)
 daydf2$Vessel_3k <- as.factor(daydf2$Vessel_3k)
-
+daydf2$Overlap <- as.number(daydf2$Overlap)
 
 ## Temporal trends #######################################
 
@@ -61,12 +47,12 @@ summary(model1)
 model2 <- glm(Proportion_Porpoise_Event ~ factor(Month),data = daydf)
 summary(model2) 
 
-<<<<<<< HEAD
+
 ## Does daylight activity change by season? BEST 
-=======
+
 ## Does daylight activity change by season?
 # BEST MODEL
->>>>>>> 4729259c53b4d9f4a1cf68e72ad12f8a464a4a1a
+
 model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
 summary(model3)
 
@@ -105,10 +91,14 @@ summary(modelv1)
 ## When do vessels overlap with porpoise presence - in a day, - in a season? Does this 
 ## change across years?
 
-## Create an overlap column
+## Create new dataframe daydf2 - and an overlap column
 daydf2 <- Vessel_Presence_20241203
-daydf2$Overlap <- ifelse(daydf2$Porpoise_Event > 0 & daydf2$Vessel_3k > 0, 1, 0)
-daydf3 <- filter(daydf2, Porpoise_Event == 1)
+daydf2$Vessel_3k <- as.numeric(daydf2$Vessel_3k)
+#daydf2$Overlap <- ifelse(daydf2$Porpoise_Event > 0 & daydf2$Vessel_3k > 0, 1, 0) this one did not work correctly 
+daydf2$Overlap <- ifelse(daydf2$Porpoise_Event == 1 & daydf2$Vessel_3k == 1, 1, 0) # run this instead 
+
+# Create dataframe daydf3 - only when porpoise are present 
+daydf3 <- filter(daydf2, Porpoise_Event == 1) 
 daydf3$Overlap <- as.factor(daydf3$Overlap)
 daydf3$Year <- as.numeric(daydf3$Year)
 
@@ -119,6 +109,8 @@ moodelvo <- glm(Overlap ~ factor(Month)*Daylight + (1|Year), data = daydf3,
                 weights = Recording_Effort)
 
 summary(moodelvo)
+
+
 
 #####################################################
 

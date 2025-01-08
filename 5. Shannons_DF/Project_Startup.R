@@ -21,7 +21,7 @@ install.packages("xxx")
 library(xxx)
 
 # INSTALLING COMMON PACKAGES - do not need to install every time - check the packages list and see if they are already there
-install.packages("pscl") 
+install.packages("DHARMa") 
 
 ## MUST LOAD PACKAGES IN EVERY TIME 
 library(DBI)
@@ -42,6 +42,8 @@ library(pscl)
 library(suncalc)
 library(tidyr)
 library(reshape2)
+library(lme4)
+library(DHARMa)
 
 
 # if you need to remove a package for any reason (updating etc) 
