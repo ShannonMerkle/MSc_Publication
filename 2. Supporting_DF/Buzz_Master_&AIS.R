@@ -742,15 +742,6 @@ Buzz_Noise_Monitor_Oct2018 <- merge(Buzz_Noise_Monitor_Oct2018,
 
 
 ##########################################################################################################################
-## SUBSET OF BUZZ_MASTER 
-
-# Create the subset for the specified date range
-Buzz_Oct2018_subset <- subset(
-  Buzz_Master,
-  Start_Time >= as.POSIXct("2018-10-08", tz = "UTC") & Start_Time <= as.POSIXct("2019-03-30", tz = "UTC")
-)
-
-View(Buzz_Oct2018_subset)
   
 ## MAKING A VESSEL TYPE COLUMN 
 
@@ -772,5 +763,74 @@ get_highest_ranked_type <- function(row, hierarchy) {
 Buzz_Master$Vessel_Type <- apply(Buzz_Master[, paste0("mmsiNumber_Type_", 1:9)], 1, 
                                  get_highest_ranked_type, hierarchy = vessel_hierarchy)
 
+##########################################################################################################################
+## SUBSET OF BUZZ_MASTER 
 
+# Create the subset for the specified date range
+Buzz_Master_Subset_Oct2018 <- subset(
+  Buzz_Master,
+  Start_Time >= as.POSIXct("2018-10-08", tz = "UTC") & Start_Time <= as.POSIXct("2019-03-30", tz = "UTC")
+)
 
+View(Buzz_Master_Subset_Oct2018)
+
+# Add columns for dB categories: 
+Buzz_Master_Subset_Oct2018$dB_55_59 <- NA
+Buzz_Master_Subset_Oct2018$dB_60_64 <- NA
+Buzz_Master_Subset_Oct2018$dB_65_69 <- NA
+Buzz_Master_Subset_Oct2018$dB_70_74 <- NA
+Buzz_Master_Subset_Oct2018$dB_75_79 <- NA
+Buzz_Master_Subset_Oct2018$dB_80_84 <- NA
+Buzz_Master_Subset_Oct2018$dB_85_89 <- NA
+Buzz_Master_Subset_Oct2018$dB_90_94 <- NA
+Buzz_Master_Subset_Oct2018$dB_95_99 <- NA
+Buzz_Master_Subset_Oct2018$dB_100_104 <- NA
+
+# check format of Median_2000Hz column - num format 
+str(noisedf)
+
+# Define the dB range columns
+dB_ranges <- list(
+  dB_55_59 = c(55.0, 59.99),
+  dB_60_64 = c(60.0, 64.99),
+  dB_65_69 = c(65.0, 69.99),
+  dB_70_74 = c(70.0, 74.99),
+  dB_75_79 = c(75.0, 79.99),
+  dB_80_84 = c(80.0, 84.99),
+  dB_85_89 = c(85.0, 89.99),
+  dB_90_94 = c(90.0, 94.99),
+  dB_95_99 = c(95.0, 99.99),
+  dB_100_104 = c(100.0, 104.99)
+)
+
+# Loop through each porpoise event in Buzz_Master_Subset_Oct2018 - ADD IN SIGN OF LIFE LATER
+for (i in 1:nrow(Buzz_Master_Subset_Oct2018)) {
+  # Extract the current event's start and end times
+  start_time <- Buzz_Master_Subset_Oct2018$Start_Time[i]
+  end_time <- Buzz_Master_Subset_Oct2018$End_Time[i]
+  
+  # Filter noisedf for entries within the event time range
+  event_noise <- noisedf[noisedf$UTC >= start_time & noisedf$UTC <= end_time, ]
+  
+  # If there are no matching entries, skip to the next event
+  if (nrow(event_noise) == 0) {
+    next
+  }
+  
+  # Count the number of entries in each dB range and populate the corresponding columns
+  for (col in names(dB_ranges)) {
+    dB_min <- dB_ranges[[col]][1]
+    dB_max <- dB_ranges[[col]][2]
+    
+    # Count the number of entries in the current dB range
+    count <- sum(event_noise$Median_2000Hz >= dB_min & event_noise$Median_2000Hz <= dB_max)
+    
+    # Assign the count to the corresponding column for the current event
+    Buzz_Master_Subset_Oct2018[[col]][i] <- ifelse(count > 0, count, NA)
+  }
+}
+
+## RUN A CHECK FOR SPECIFIC EVENT 
+# Extract rows where Event_ID is 941
+event_941_data <- noisedf[noisedf$Event_ID == 941, ]
+View(event_941_data)

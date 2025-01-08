@@ -1,4 +1,4 @@
-## Noisband impact ##  -----
+## Noiseband impact ##  -----
 
 ################################################
 ## Load packages
@@ -94,4 +94,6 @@ ggplot(noisedf3, aes(x = Average_Speed, y = ThirdOctave_894_1118_median)) +
   labs(x = "Vessel Speed", y = "Noise")
 
 ################################################
+
+
 
