@@ -31,6 +31,10 @@ dispersion_stat <- residual_deviance / residual_df
 modelp2 <- glm(Median_2000Hz ~ present, data = noisedf, family = negative.binomial(theta = 1))
 summary(modelp2)
 
+4.1229216 + 0.0473186
+
+exp(0.0473186)
+
 # Diagnostics 
 plot(modelp2)
 
