@@ -73,6 +73,8 @@ plot(model1)
 # residuals
 crPlots(model1)
 
+## 28% reduction in buzz rate
+
 ################################################
 
 ## Quasibinomial with environmental variables 
@@ -99,7 +101,7 @@ summary(model4) ## No effect
 
 
 # Visualise
-ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = Daylight)) +
+ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate)) +
   geom_boxplot() +
   labs(x = "Vessel Presence", y = "Proportional Buzz Rate")
 
@@ -109,6 +111,9 @@ buzzdf5 <- filter(buzzdf4, buzzdf4$Vessel_Overlap != 0)
 
 ## Overlap with vessel time 
 # BEST MODEL
+model5 <- glm(Buzz_Rate ~ Vessel_Overlap, data = buzzdf4, family = quasibinomial) 
+summary(model5)
+
 model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial) 
 summary(model5)
 

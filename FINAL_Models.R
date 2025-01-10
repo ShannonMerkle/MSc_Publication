@@ -41,6 +41,8 @@ summary(ModelTemporal_2)
 plot(ModelTemporal_2)
 
 # Summary of results:
+#Porpoises vocalise more at night than the day, across all months 
+#They vocalise the most in the summer (May - August)
 
 
 ##################################
