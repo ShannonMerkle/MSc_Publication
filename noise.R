@@ -1,4 +1,4 @@
-## Noisband impact ##  -----
+## Noiseband impact ##  -----
 
 ################################################
 ## Load packages
@@ -99,3 +99,7 @@ ggplot(noisedf3, aes(x = Average_Speed, y = Median_2000Hz)) +
 ################################################
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> de402311547f1e937af50caadeaafa4cb8d6398a
