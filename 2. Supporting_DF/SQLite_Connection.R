@@ -41,18 +41,24 @@ connect2021Sept13 <- dbConnect(SQLite(), "/Volumes/NAtlST_EgSE/MSc_Project/MASTE
 
   
 # TEST TO MAKE SURE THEY HAVE ALL FORMATTED TABLES - just an extra check, not necessary 
-dbListTables(connect2018Oct09)
-dbListFields(connect2018Oct09, "Sound_Acquisition") 
+dbListTables(connect2020Sept22)
+dbListFields(connect2021Feb17, "Noise_Monitor") 
 
 # CREATE NEW DATAFRAMES FOR EACH PORPOISE_EXPOSURE TABLE IN EACH DATABASE
 Sound_Acq_Sept2021 <- dbReadTable(connect2021Sept13, "Sound_Acquisition")
 
-View(Noise_Monitor_2018Oct09)
+Noise_Monitor_2018Oct09 <- dbReadTable(connect2018Oct09, "Noise_Monitor")
+Noise_Monitor_2020May12 <- dbReadTable(connect2020May13, "Noise_Monitor")
+Noise_Monitor_2021Jan01<- dbReadTable(connect2021Jan01, "Noise_Monitor")
 
 
 
+## RUN dbDisconnect() when finished working with connection
 
 
+dbDisconnect(connect2021Sept13)
+
+remove(connect2021Sept13)
 
 
 

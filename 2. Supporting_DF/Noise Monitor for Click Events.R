@@ -143,6 +143,58 @@ Buzz_Noise_Monitor_Oct2018$Median_2000Hz <- apply(Buzz_Noise_Monitor_Oct2018[, c
                                                   1, median, na.rm = TRUE)
 
 
+###################################################################################################################################
+
+## MUST TAKE A LOGARITHIC MEAN INSTEAD OF STANDARD GEOMETRIC MEAN - dB are in log scale 
+
+## FOR ALL MEDIAN COLUMNS 
+# keep the median, low95 and high95 columns, remove min, max, mean columns
+Noise_Monitor_2018Oct09 <- Noise_Monitor_2018Oct09  %>%
+  select(-contains("_Min"))
+Noise_Monitor_2018Oct09 <- Noise_Monitor_2018Oct09  %>%
+  select(-contains("_Max"))
+Noise_Monitor_2018Oct09 <- Noise_Monitor_2018Oct09  %>%
+  select(-contains("_2236_2806_"))
+
+Noise_Monitor_2020May12 <- Noise_Monitor_2020May12   %>%
+  select(-contains("_Min"))
+Noise_Monitor_2020May12 <- Noise_Monitor_2020May12   %>%
+  select(-contains("_Max"))
+
+Noise_Monitor_2021Jan01 <- Noise_Monitor_2021Jan01  %>%
+  select(-contains("_Min"))
+Noise_Monitor_2021Jan01 <- Noise_Monitor_2021Jan01  %>%
+  select(-contains("_Max"))
+
+## GETTING THE LOG AVERAGE OF <2000Hz COLUMNS - median
+
+# Define the relevant third-octave columns
+ThirdOctave_2000Hz_median <- c("ThirdOctave_447_561_median", 
+                          "ThirdOctave_561_709_median", 
+                          "ThirdOctave_709_894_median", 
+                          "ThirdOctave_894_1118_median", 
+                          "ThirdOctave_1118_1414_median", 
+                          "ThirdOctave_1414_1788_median", 
+                          "ThirdOctave_1788_2236_median")
+
+# Convert dB to linear scale for each column
+linear_MEDIAN_2018Oct09 <- 10^(Noise_Monitor_2018Oct09[ThirdOctave_2000Hz_median] / 10)
+
+# Calculate the mean and median in linear scale
+linear_median <- apply(linear_MEDIAN_2018Oct09, 1, median, na.rm = TRUE)
+
+# Convert back to log dB and add into dataframe
+Noise_Monitor_2018Oct09$LogMedian_2000Hz <- 10 * log10(linear_median)
+View(Noise_Monitor_2018Oct09)
+
+
+
+
+# Create a 'total' dataset but only using specific months - NOT USED CURRENTLY 
+range_Oct2018 <- seq(as.Date("2018-10-01"), as.Date("2018-10-31"), by = "day")
+range_Feb2019 <- seq(as.Date("2019-02-01"), as.Date("2019-02-29"), by = "day")
+range_June2020 <- seq(as.Date("2020-06-01"), as.Date("2020-06-30"), by = "day")
+range_Jan2021 <- seq(as.Date("2021-01-01"), as.Date("2021-01-31"), by = "day")
 
 
 

@@ -284,8 +284,65 @@ ggplot(Vessel_Presence_plot_variable_Season , aes(x = Season, y = Count, fill = 
 
 ################################################################################################################################3
 
-## need to remove the rows in Vessel Presence which have 0 recording effort but still have a detection 
+## ADDING NOISE MONITOR TO VESSEL PRESENCE MINUTE 
+
+# make combined dataset with all Noise Monitor data 
+Noise_Monitor_TOTAL <- bind_rows(Noise_Monitor_2018Oct09, Noise_Monitor_2020May13, Noise_Monitor_2021Jan01, Noise_Monitor_2021Sept13)
+View(Noise_Monitor_TOTAL)
+# remove all unnecessary columns 
+Noise_Monitor_TOTAL <- Noise_Monitor_TOTAL  %>%
+  select(-contains("_low95"))
+
+# make Median_2000Hz column
+# then adjust the code below to fit with Vessel_Presence
+# ADD SIGN OF LIFE 
+# RUN 
 
 
+# Defining ranges 
+dB_ranges <- list(
+  dB_55_59 = c(55.0, 59.99),
+  dB_60_64 = c(60.0, 64.99),
+  dB_65_69 = c(65.0, 69.99),
+  dB_70_74 = c(70.0, 74.99),
+  dB_75_79 = c(75.0, 79.99),
+  dB_80_84 = c(80.0, 84.99),
+  dB_85_89 = c(85.0, 89.99),
+  dB_90_94 = c(90.0, 94.99),
+  dB_95_99 = c(95.0, 99.99),
+  dB_100_104 = c(100.0, 104.99)
+)
+
+# Adding the blank columns from db_range list 
+for (col in names(dB_ranges)) {
+  Vessel_Presence[[col]] <- NA
+}
+
+# Loop through each porpoise event in Buzz_Master_Subset_Oct2018
+for (i in 1:nrow(Vessel_Presence)) {
+  # Extract the current event's start and end times
+  start_time <- Buzz_Master_Subset_Oct2018$Start_Time[i]
+  end_time <- Buzz_Master_Subset_Oct2018$End_Time[i]
+  
+  # Filter noisedf for entries within the event time range
+  event_noise <- noisedf[noisedf$UTC >= start_time & noisedf$UTC <= end_time, ]
+  
+  # If there are no matching entries, skip to the next event
+  if (nrow(event_noise) == 0) {
+    next
+  }
+  
+  # Count the number of entries in each dB range and populate the corresponding columns
+  for (col in names(dB_ranges)) {
+    dB_min <- dB_ranges[[col]][1]
+    dB_max <- dB_ranges[[col]][2]
+    
+    # Count the number of entries in the current dB range
+    count <- sum(event_noise$Median_2000Hz >= dB_min & event_noise$Median_2000Hz <= dB_max)
+    
+    # Assign the count to the corresponding column for the current event
+    Buzz_Master_Subset_Oct2018[[col]][i] <- ifelse(count > 0, count, NA)
+  }
+}
 
 

@@ -834,3 +834,12 @@ for (i in 1:nrow(Buzz_Master_Subset_Oct2018)) {
 # Extract rows where Event_ID is 941
 event_941_data <- noisedf[noisedf$Event_ID == 941, ]
 View(event_941_data)
+
+## Add in a column for total count 
+Buzz_Master_Subset_Oct2018$Total_dBCount <- NA
+# now get the sum for each row 
+Buzz_Master_Subset_Oct2018$Total_dBCount <- rowSums(
+  Buzz_Master_Subset_Oct2018[, names(dB_ranges)], 
+  na.rm = TRUE
+)
+View(Buzz_Master_Subset_Oct2018)

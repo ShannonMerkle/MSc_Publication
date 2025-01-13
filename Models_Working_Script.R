@@ -33,6 +33,9 @@
     ## HOW THIS WORKS OUT IS: Day + overlap is the intercept + the estimate for Vessel_Overlap 
       # to interpret the intercept YOU ADD THE INTERACTION VALUE TO THE ORIGINAL ESTIMATE **
       # **** this means that you add the vessel_overlap:night interaction to the vessel_overlap estimate (NOT THE INTERCEPT)
+## ** INTERACTION REPRESENTS THE ADDITION EFFECT (pair to the first effect listed)
+## DO THE ORDER OF LISTING INTERACTIONS MATTER? (ex Month*Daylight vs Daylight*Month)
+
 
 ##############################################################################################
 ########### TEMPORAL MODELS ###################################################
