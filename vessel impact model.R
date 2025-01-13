@@ -73,6 +73,8 @@ plot(model1)
 # residuals
 crPlots(model1)
 
+## 28% reduction in buzz rate
+
 ################################################
 
 ## Quasibinomial with environmental variables 
@@ -92,23 +94,61 @@ summary(model3)
 plot(model3)
 
 
-## Month as a fixed effect
-model4 <- glm(Buzz_Rate ~ Exposure_3k*Daylight + Month, data = buzzdf4, family = quasibinomial)
-summary(model4) ## No effect
+#Log odds
+intercept = -1.62254
+exposure_3k1 = -0.57368
+daylight_night = -0.25153
+interaction = 0.41027
+
+# Calculate log-odds for each scenario
+# 1. Daylight, Exposure_3k1 = 0
+log_odds_daylight_exposure0 = intercept
+
+# 2. Daylight, Exposure_3k1 = 1
+log_odds_daylight_exposure1 = intercept + exposure_3k1
+
+# 3. Night, Exposure_3k1 = 0
+log_odds_night_exposure0 = intercept + daylight_night
+
+# 4. Night, Exposure_3k1 = 1
+log_odds_night_exposure1 = intercept + daylight_night + exposure_3k1 + interaction
+
+# Convert log-odds to odds
+odds_daylight_exposure0 = exp(log_odds_daylight_exposure0)
+odds_daylight_exposure1 = exp(log_odds_daylight_exposure1)
+odds_night_exposure0 = exp(log_odds_night_exposure0)
+odds_night_exposure1 = exp(log_odds_night_exposure1)
 
 
+reduction_daylight = 1 - (odds_daylight_exposure1 / odds_daylight_exposure0)
+reduction_night = 1 - (odds_night_exposure1 / odds_night_exposure0)
 
 # Visualise
 ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = Daylight)) +
   geom_boxplot() +
   labs(x = "Vessel Presence", y = "Proportional Buzz Rate")
 
+## Month as a fixed effect
+model4 <- glm(Buzz_Rate ~ Exposure_3k*Daylight + factor(Month), data = buzzdf4, family = quasibinomial)
+summary(model4) ## No effect
+
+
+# Visualise
+ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = factor(Month))) +
+  geom_boxplot() +
+  labs(x = "Vessel Presence", y = "Proportional Buzz Rate")
+
+
+exp(-0.57368)
 ################################################
 ## Vessel overlap instead of exposure binomial 
 buzzdf5 <- filter(buzzdf4, buzzdf4$Vessel_Overlap != 0)
 
 ## Overlap with vessel time 
 # BEST MODEL
+model5 <- glm(Buzz_Rate ~ Vessel_Overlap, data = buzzdf4, family = quasibinomial) 
+summary(model5)
+
 model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial) 
 summary(model5)
 
