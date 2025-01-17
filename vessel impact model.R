@@ -89,7 +89,7 @@ plot(model2)
 ## without month 
 model3 <- glm(Buzz_Rate ~ Exposure_3k*Daylight, data = buzzdf4, family = quasibinomial)
 summary(model3)
-
+family= quasi
 #Diagnostics
 plot(model3)
 
