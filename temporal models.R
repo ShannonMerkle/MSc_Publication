@@ -30,7 +30,7 @@ daydf2$Daylight <- as.factor(daydf2$Daylight)
 daydf2$Month <- as.numeric(daydf2$Month)
 daydf2$Year <- as.numeric(daydf2$Year)
 daydf2$Vessel_3k <- as.factor(daydf2$Vessel_3k)
-daydf2$Overlap <- as.number(daydf2$Overlap)
+daydf2$Overlap <- as.numeric(daydf2$Overlap)
 
 ## Temporal trends #######################################
 
@@ -51,7 +51,6 @@ summary(model2)
 ## Does daylight activity change by season? BEST 
 
 ## Does daylight activity change by season?
-# BEST MODEL
 
 model3 <- glm(Proportion_Porpoise_Event ~ factor(Month)*Daylight + (1|Year), data = daydf)
 summary(model3)
