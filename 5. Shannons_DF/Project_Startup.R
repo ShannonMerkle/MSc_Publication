@@ -21,7 +21,7 @@ install.packages("xxx")
 library(xxx)
 
 # INSTALLING COMMON PACKAGES - do not need to install every time - check the packages list and see if they are already there
-install.packages("DHARMa") 
+install.packages("plotly") 
 
 ## MUST LOAD PACKAGES IN EVERY TIME 
 library(DBI)
@@ -30,6 +30,7 @@ library(dbplyr)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(plotly)
 library(nnet)
 library(mgcv)
 library(lubridate)
@@ -124,6 +125,14 @@ png("Annual Recording Heatmap.png", width = 800, height = 600, res = 150)
 grid.table(Click_Event_Time_of_Day_Table, rows = NULL)
 
 dev.off()
+
+### TO REORDER EXISTING COLUMNS IN A DATAFRAME 
+
+# save the columns you want to go first as a value 
+priority_cols <- c("colA", "colB", "colC")
+
+# Rearrange dataframe - 
+DATAFRAME <- DATAFRAME[, c(priority_cols, setdiff(names(DATAFRAME), priority_cols))]
 
 
 

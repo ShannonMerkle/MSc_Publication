@@ -230,7 +230,8 @@ priority_cols <- c("Event_ID",
                    "Vessel_Count",
                    "Average_Speed", 
                    "Vessel_Presence_Minutes",
-                   "Vessel_Overlap"
+                   "Vessel_Overlap", 
+                   "Vessel_Type"
                   )
 
 

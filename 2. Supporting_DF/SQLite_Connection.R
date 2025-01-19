@@ -45,20 +45,23 @@ dbListTables(connect2020Sept22)
 dbListFields(connect2021Feb17, "Noise_Monitor") 
 
 # CREATE NEW DATAFRAMES FOR EACH PORPOISE_EXPOSURE TABLE IN EACH DATABASE
-Sound_Acq_Sept2021 <- dbReadTable(connect2021Sept13, "Sound_Acquisition")
 
 Noise_Monitor_2018Oct09 <- dbReadTable(connect2018Oct09, "Noise_Monitor")
-Noise_Monitor_2020May12 <- dbReadTable(connect2020May13, "Noise_Monitor")
+Noise_Monitor_2020May13 <- dbReadTable(connect2020May13, "Noise_Monitor")
 Noise_Monitor_2021Jan01<- dbReadTable(connect2021Jan01, "Noise_Monitor")
 
 
 
 ## RUN dbDisconnect() when finished working with connection
 
+dbDisconnect(connect2018Oct09)
+dbDisconnect(connect2020May13)
+dbDisconnect(connect2021Jan01)
+remove(connect2018Oct09)
+remove(connect2020May13)
+remove(connect2021Jan01)
 
-dbDisconnect(connect2021Sept13)
 
-remove(connect2021Sept13)
 
 
 

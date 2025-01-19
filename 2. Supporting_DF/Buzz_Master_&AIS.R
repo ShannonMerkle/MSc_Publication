@@ -843,3 +843,48 @@ Buzz_Master_Subset_Oct2018$Total_dBCount <- rowSums(
   na.rm = TRUE
 )
 View(Buzz_Master_Subset_Oct2018)
+
+### TO RE-ORDER COLUMNS IN BUZZ MASTER 
+priority_cols <- c("colA", "colB", "colC")
+
+priority_cols <- c("Event_ID", 
+                   "Start_Time", 
+                   "End_Time", 
+                   "Click_Train_Type",
+                   "Click_Train_Length", 
+                   "Total_Minutes",
+                   "Total_Clicks",
+                   "Buzz_Clicks", 
+                   "Buzz_Rate",
+                   "Scan_Clicks", 
+                   "Scan_Rate", 
+                   "Presence_Clicks", 
+                   "Buzz_Train", 
+                   "Scan_Train", 
+                   "Month",
+                   "Hour",
+                   "Time_of_day",
+                   "Season",
+                   "Daylight",
+                   "Dawn_Dusk",
+                   "dawn", 
+                   "dusk", 
+                   "UTC_Sunrise", 
+                   "UTC_Sunset",
+                   "Exposure_3k", 
+                   "Exposure_500m", 
+                   "Vessel_Exposure",
+                   "Vessel_Count",
+                   "Average_Speed", 
+                   "Vessel_Presence_Minutes",
+                   "Vessel_Overlap", 
+                   "Vessel_Type"
+)
+
+
+
+
+# Rearrange dataframe
+Buzz_Master <- Buzz_Master[, c(priority_cols, setdiff(names(Buzz_Master), priority_cols))]
+View(Buzz_Master)
+

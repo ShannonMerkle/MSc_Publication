@@ -102,12 +102,4 @@ ggplot(noisedf3, aes(x = Average_Speed, y = Median_2000Hz)) +
 
 ################################################
 
-<<<<<<< HEAD
-saveRDS(Buzz_Master_Subset_Oct2018, "Buzz_Master_Subset_Oct2018.rds")
-=======
 
-<<<<<<< HEAD
-=======
->>>>>>> 539c030c2281d0a063c2f72529004be15df07e7c
-
->>>>>>> de402311547f1e937af50caadeaafa4cb8d6398a
