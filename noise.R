@@ -10,14 +10,14 @@ library(lme4)
 
 ## Load df 
 noisedf <- Buzz_Master_Subset_Oct2018_20250119
+noisedf <- filter(noisedf, noisedf$Total_Clicks > 6)
+noisedf <- filter(noisedf, noisedf$Total_Minutes <61)
 
 ################################################
 ## Vessels and noise -----
-## Noise and presence 
-noisedf$present <- ifelse(noisedf$Vessel_Count > 1, 1, 0)
-noisedf$present <- as.factor(noisedf$present)
 
-modelp <- lm(Normalized_AUC ~ present , data = noisedf)
+## Noise and presence 
+modelp <- lm(Normalized_AUC ~ Exposure_3k, data = noisedf)
 summary(modelp)
 
 #Overdispersion check
@@ -28,20 +28,17 @@ dispersion_stat <- residual_deviance / residual_df
 
 # Negative binomial model
 #BEST MODEL
-modelp2 <- glm(Normalized_AUC ~ present, data = noisedf, family = negative.binomial(theta = 1))
+modelp2 <- glm(Normalized_AUC ~ Exposure_3k * Daylight, data = noisedf, family = negative.binomial(theta = 1))
 summary(modelp2)
-
-0.66935     + 0.73460    
-
-exp(1.40395)
 
 # Diagnostics 
 plot(modelp2)
 
 # Visualise
-ggplot(noisedf, aes(x = present, y = Normalized_AUC)) +
+ggplot(noisedf, aes(x = factor(Exposure_3k), y = Normalized_AUC)) +
   geom_boxplot() +
-  labs(x = "Vessel Presence", y = "Noise")
+  labs(x = "Vessel Presence", y = "Noise") +
+  facet_wrap(~Daylight)
 # Gets louder when a vessel is present.
 
 
@@ -67,13 +64,11 @@ plot(model2)
 ggplot(noisedf, aes(x = Vessel_Count, y = Normalized_AUC)) +
   geom_smooth(method = "lm") +
   labs(x = "Vessel Count", y = "Noise")
-
 # With more vessels present, the noise gets louder.
 
 
 ## Noise and speed 
 noisedf2 <- filter(noisedf, noisedf$Vessel_Count == 1)
-
 model3 <- lm(Normalized_AUC ~ Average_Speed , data = noisedf2)
 summary (model3)
 
@@ -84,10 +79,9 @@ dispersion_stat <- residual_deviance / residual_df
 # Overdispersed 
 
 # Negative binomial model
-noisedf3 <- filter(noisedf, noisedf$Average_Speed < 40)
 
 # BEST MODEL
-model4 <- glm(Normalized_AUC ~ Average_Speed + (1|Event_ID), data = noisedf3, family = negative.binomial(theta = 1))
+model4 <- glm(Normalized_AUC ~ Average_Speed, data = noisedf2, family = negative.binomial(theta = 1))
 summary(model4)
 
 #Diagnostics 
@@ -100,20 +94,21 @@ ggplot(noisedf3, aes(x = Average_Speed, y = Normalized_AUC)) +
   labs(x = "Vessel Speed", y = "Noise")
 # Negative relationship, quicker vessels, noise decreases
 
+## Noise and overlap 
+noiseoverlap <- lm(Vessel_Overlap ~ Normalized_AUC, data = noisedf)
+summary(noiseoverlap)
+
+ggplot(noisedf, aes(x = Vessel_Overlap, y = Normalized_AUC)) +
+  geom_smooth() +
+  #geom_point()+
+  labs(x = "Vessel overlap", y = "Normalised AUC")
+
+
 ################################################
 ## Model noise impacts
 # AUC (cumulative noise)
-
-noisedf4 <- filter(noisedf3, noisedf3$Buzz_Rate != 0.0)
-noisedf4 <- filter(noisedf4, noisedf4$Buzz_Clicks > 5)
-hist(noisedf3$Buzz_Rate) # need to remove longer events 
-
-## 1hr long events 
-noisedf4 <- filter(noisedf4, noisedf4$Total_Minutes <61)
-hist(noisedf3$Total_Minutes)
-
 ## Binomial model of proportions
-model <- glm(cbind(Buzz_Clicks, Total_Clicks - Buzz_Clicks) ~ Normalized_AUC, data = noisedf4, family = binomial)
+model <- glm(cbind(Buzz_Clicks, Total_Clicks - Buzz_Clicks) ~ Normalized_AUC, data = noisedf, family = binomial)
 summary(model)
 
 #Overdispersion check
@@ -123,7 +118,7 @@ dispersion_stat <- residual_deviance / residual_df
 #overdispersed
 
 ## Quasibinomial for overdispersed and non-normally distributed data
-model1 <- glm(Buzz_Rate ~ Normalized_AUC, data = noisedf4, family = quasibinomial)
+model1 <- glm(Buzz_Rate ~ Normalized_AUC, data = noisedf, family = quasibinomial)
 summary(model1)
 
 # Diagnostics
@@ -133,39 +128,18 @@ plot(model1)
 crPlots(model1)
 
 # visualise
-ggplot(noisedf3, aes(x = Normalized_AUC, y = Buzz_Rate)) +
-  geom_smooth(method = "lm") +
+ggplot(noisedf, aes(x = Vessel_Overlap, y = Buzz_Rate, fill = factor(Exposure_3k))) +
+  geom_smooth() +
   #geom_point()+
-  labs(x = "Noise", y = "Buzz Rate")
+  labs(x = "Vessel overlap", y = "Buzz Rate")
 
 ## Vessel Type
-
-model1 <- glm(Buzz_Rate ~ Vessel_Type , data = noisedf4, family = quasibinomial)
+model1 <- glm(Buzz_Rate ~ Vessel_Type , data = noisedf, family = quasibinomial)
 summary(model1)
+
+## Vessel type & AUC
+vt_auc <- lm(Normalized_AUC ~ Vessel_Type, data = noisedf4)
+summary(vt_auc)
 
 ###################################################################################################
 ## High & low percentile 
-
-percdf <- merge(Buzz_Master_Subset_Oct2018_20250119, Buzz_Noise_Monitor_Oct2018_20250119, by = "Event_ID")
-
-## Model 
-percm1 <- glm(Buzz_Rate ~ LogMedian_high95_2000Hz, data = percdf, family = quasibinomial)
-summary(percm1)
-
-# visualise
-ggplot(percdf, aes(x = LogMedian_high95_2000Hz, y = Buzz_Rate)) +
-  geom_smooth(method = "lm") +
-  #geom_point()+
-  labs(x = "Noise", y = "Buzz Rate")
-
-# visualise
-ggplot(percdf, aes(x = LogMedian_low95_2000Hz, y = Buzz_Rate)) +
-  geom_smooth(method = "lm") +
-  #geom_point()+
-  labs(x = "Noise", y = "Buzz Rate")
-
-## Model 
-percm1 <- glm(Buzz_Rate ~ LogMedian_high95_2000Hz*Vessel_Type, data = percdf, family = quasibinomial)
-summary(percm1)
-
-
