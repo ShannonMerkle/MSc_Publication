@@ -102,6 +102,8 @@ ggplot(noisedf3, aes(x = Average_Speed, y = Normalized_AUC)) +
 
 ################################################
 ## Model noise impacts
+# AUC (cumulative noise)
+
 noisedf4 <- filter(noisedf3, noisedf3$Buzz_Rate != 0.0)
 noisedf4 <- filter(noisedf4, noisedf4$Buzz_Clicks > 5)
 hist(noisedf3$Buzz_Rate) # need to remove longer events 
@@ -140,3 +142,30 @@ ggplot(noisedf3, aes(x = Normalized_AUC, y = Buzz_Rate)) +
 
 model1 <- glm(Buzz_Rate ~ Vessel_Type , data = noisedf4, family = quasibinomial)
 summary(model1)
+
+###################################################################################################
+## High & low percentile 
+
+percdf <- merge(Buzz_Master_Subset_Oct2018_20250119, Buzz_Noise_Monitor_Oct2018_20250119, by = "Event_ID")
+
+## Model 
+percm1 <- glm(Buzz_Rate ~ LogMedian_high95_2000Hz, data = percdf, family = quasibinomial)
+summary(percm1)
+
+# visualise
+ggplot(percdf, aes(x = LogMedian_high95_2000Hz, y = Buzz_Rate)) +
+  geom_smooth(method = "lm") +
+  #geom_point()+
+  labs(x = "Noise", y = "Buzz Rate")
+
+# visualise
+ggplot(percdf, aes(x = LogMedian_low95_2000Hz, y = Buzz_Rate)) +
+  geom_smooth(method = "lm") +
+  #geom_point()+
+  labs(x = "Noise", y = "Buzz Rate")
+
+## Model 
+percm1 <- glm(Buzz_Rate ~ LogMedian_high95_2000Hz*Vessel_Type, data = percdf, family = quasibinomial)
+summary(percm1)
+
+
