@@ -142,4 +142,3 @@ vt_auc <- lm(Normalized_AUC ~ Vessel_Type, data = noisedf4)
 summary(vt_auc)
 
 ###################################################################################################
-## High & low percentile 
