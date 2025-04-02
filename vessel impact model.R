@@ -13,12 +13,11 @@ library(DHARMa)
 library(car)
 
 ## Clean vessel presence of 0/1 effort 
-vp <- Vessel_Presence
+Vessel_Presence_20241212 <- readRDS("C:/Users/Rachel Lennon/OneDrive - University of Glasgow/MSc/MSc_Publication/3. Data/Vessel_Presence_20241212.rds")
+vp <- Vessel_Presence_20241212
 
 vp2 <- filter(vp, vp$Recording_Effort == 0)
 vp2 <- filter(vp2, vp2$Porpoise_Event == 1)
-
-unique(vp2$Event_ID)
 
 # Clear vessel presence
 Vessel_Presence_20241212 <- anti_join(vp, vp2, by = "Event_ID")
@@ -32,6 +31,7 @@ saveRDS(Buzz_Master_20241212, "Buzz_Master_20241212.rds")
 
 
 ## Load df 
+Buzz_Master_20241212 <- readRDS("C:/Users/Rachel Lennon/OneDrive - University of Glasgow/MSc/MSc_Publication/3. Data/Buzz_Master_20241212.rds")
 buzzdf <- Buzz_Master_20241212
 
 # Clean variable type 
@@ -89,7 +89,6 @@ plot(model2)
 ## without month 
 model3 <- glm(Buzz_Rate ~ Exposure_3k*Daylight, data = buzzdf4, family = quasibinomial)
 summary(model3)
-family= quasi
 #Diagnostics
 plot(model3)
 
@@ -124,12 +123,19 @@ reduction_daylight = 1 - (odds_daylight_exposure1 / odds_daylight_exposure0)
 reduction_night = 1 - (odds_night_exposure1 / odds_night_exposure0)
 
 # Visualise
-ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = Daylight)) +
+plot <- ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = Daylight)) +
   geom_boxplot() +
-  labs(x = "Vessel Presence", y = "Proportional Buzz Rate")
+  labs(x = "Vessel Presence", y = "Proportional Buzz Rate") +
+  scale_fill_manual(values = c("Day" = "navy", "Night" = "pink")) +  # Customize fill colors
+  theme_minimal()
+
+tiff('vessel impact.tiff', units="in", width=5, height=4, res=1000)
+plot
+
+dev.off()
 
 ## Month as a fixed effect
-model4 <- glm(Buzz_Rate ~ Exposure_3k*Daylight + factor(Month), data = buzzdf4, family = quasibinomial)
+model4 <- glm(Buzz_Rate ~ Exposure_3k*factor(Month), data = buzzdf4, family = quasibinomial)
 summary(model4) ## No effect
 
 
@@ -140,21 +146,7 @@ ggplot(buzzdf4, aes(x = Exposure_3k, y = Buzz_Rate, fill = factor(Month))) +
 
 
 exp(-0.57368)
-################################################
-## Vessel overlap instead of exposure binomial 
-buzzdf5 <- filter(buzzdf4, buzzdf4$Vessel_Overlap != 0)
 
-## Overlap with vessel time 
-# BEST MODEL
-model5 <- glm(Buzz_Rate ~ Vessel_Overlap, data = buzzdf4, family = quasibinomial) 
-summary(model5)
+#####################################################################################
 
-model5 <- glm(Buzz_Rate ~ Vessel_Overlap*Daylight, data = buzzdf4, family = quasibinomial) 
-summary(model5)
-
-ggplot(buzzdf4, aes(x = Vessel_Overlap, y = Buzz_Rate)) +
-  geom_smooth(method = "lm") +
-  labs(x = "Vessel Overlap", y = "Proportional Buzz Rate")
-
-
-
+overlap_buzz <- glm(Buzz_Rate + Vessel_Overlap )
