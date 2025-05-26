@@ -21,6 +21,7 @@ daydf <- Vessel_Presence_20241212
 daydf$Vessel_3k <- as.numeric(daydf$Vessel_3k)
 daydf$Year <- as.numeric(daydf$Year)
 daydf$Daylight <- as.factor(daydf$Daylight)
+daydf$Daylight <- factor(daydf$Daylight, levels = c("Night", "Day"))
 daydf$Month <- as.numeric(daydf$Month)
 daydf$Year <- as.numeric(daydf$Year)
 daydf$Vessel_3k <- as.factor(daydf$Vessel_3k)
@@ -127,8 +128,8 @@ porptemp<- ggplot(pred, aes(x = Month, y = predicted, color = group)) +
        title = "",
        color = "Daylight", fill = "Daylight") +
   scale_y_continuous(limits = c(0, 0.75)) +
-  scale_color_manual(values = c("Day" = "grey80", "Night" = "grey20")) +  # Change line colors
-  scale_fill_manual(values = c("Day" = "grey80", "Night" = "grey20")) +  # Change ribbon fill colors
+  scale_color_manual(values = c("Day" = "pink", "Night" = "navy")) +  # Change line colors
+  scale_fill_manual(values = c("Day" = "pink", "Night" = "navy")) +  # Change ribbon fill colors
   theme_minimal()
 
 tiff('porp temporal plot.tiff', units="in", width=5, height=4, res=1000)
@@ -191,19 +192,23 @@ summary(overlap5)
 ## Visual
 # Summarize to calculate proportion of events with overlap
 summary_data <- daydf2 %>%
-  group_by(Year, Month, Daylight, Vessel_3k, Porpoise_Event) %>%
-  summarise(Proportion_Overlap = mean(Overlap),  # Proportion of 1s in each group
-            Count = n(), .groups = "drop")  # Count of events per group
+  group_by(Year, Month, Daylight) %>%
+  summarise(
+    total = n(),
+    overlap_count = sum(Overlap == 1),
+    overlap_percent = (overlap_count / total) * 100
+  ) %>%
+  ungroup()
 
 # Create the bar plot with dodged bars
-vessel_overlap <- ggplot(summary_data, aes(x = as.factor(Month), y = Proportion_Overlap, fill = Daylight)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) + 
-  scale_fill_manual(values = c("Day" = "navy", "Night" = "pink")) +
-  labs(x = "Month", y = "Mean Vessel Overlap", fill = "Daylight") +
+vessel_overlap <- ggplot(summary_data, aes(x = as.factor(Month), y = overlap_percent, fill = Daylight)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 1)) + 
+  scale_fill_manual(values = c("Day" = "pink", "Night" = "navy")) +
+  labs(x = "Month", y = "Mean Vessel and Porpoise Overlap (%)", fill = "Daylight") +
   theme_minimal() +
   theme(text = element_text(size = 14))
 
-tiff('porp temporal plot.tiff', units="in", width=5, height=4, res=1000)
+tiff('overlap plot.tiff', units="in", width=5, height=4, res=1000)
 
 vessel_overlap
 
@@ -219,6 +224,7 @@ buzzdf$Normal_Clicks <- as.integer(buzzdf$Normal_Clicks)
 
 # Clean variable type 
 buzzdf$Daylight <- as.factor(buzzdf$Daylight)
+buzzdf$Daylight <- factor(buzzdf$Daylight, levels = c("Night", "Day"))
 buzzdf$Month <- as.numeric(buzzdf$Month)
 buzzdf$Exposure_3k <- as.factor(buzzdf$Exposure_3k) 
 buzzdf2 <- filter(buzzdf, buzzdf$Buzz_Rate != 0.0) #Only events with buzz i.e. foraging events. 
@@ -301,7 +307,7 @@ OR_night <- exp(exposure_3k1 + daylight_night + interaction)
 plot <- ggplot(buzzdf3, aes(x = Exposure_3k, y = Buzz_Rate, by = Daylight, fill = Daylight)) +
   geom_boxplot() +
   labs(x = "Vessel Presence", y = "Buzz Rate") +
-  scale_fill_manual(values = c("Day" = "navy", "Night" = "pink")) +  # Customize fill colors
+  scale_fill_manual(values = c("Day" = "pink", "Night" = "navy")) +  # Customize fill colors
   theme_minimal() 
 
 tiff('vessel impact.tiff', units="in", width=5, height=4, res=1000)
